@@ -1,33 +1,40 @@
 #[macro_use]
 extern crate serde_derive;
-extern crate curl;
-
 extern crate serde;
 extern crate serde_json;
+//extern crate curl;
 
 mod rate;
 mod rate_provider;
+mod util;
 
 use rate::Rate;
 use std::{thread, time};
-use std::io::stdout;
-use std::io::Write;
 
-fn get_and_print_rates() {
+fn get_and_print_rates() -> Result<(), ()> {
     let result = rate_provider::get();
     if let Some(rates) = result {
-        print!("\x1bc"); // Clear the screen
-        stdout().flush().unwrap();
+        println!("------------------------------------------------");
+        print!("{}[2J", 27 as char); // Clear the screen
 
         for rate in rates {
-            println!("Name: {} ({})  Price USD: {} / Price EUR: {}", rate.name, rate.symbol, rate.price_usd, rate.price_eur);
+            println!(
+                "{} Price USD: {} /  Price EUR: {}",
+                util::str_pad(&rate.symbol, 5, ' '),
+                util::str_pad(&rate.price_usd, 10, ' '),
+                util::str_pad(&rate.price_eur, 10, ' ')
+            );
         }
+
+        Ok(())
+    } else {
+        Err(())
     }
 }
 
 fn main() {
     loop {
-        get_and_print_rates();
+        if get_and_print_rates().is_err() { break; }
 
         let interval = time::Duration::from_secs(1);
         thread::sleep(interval);
