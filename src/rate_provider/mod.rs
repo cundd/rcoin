@@ -2,13 +2,14 @@ extern crate curl;
 
 use serde_json;
 use self::curl::easy::Easy;
-use rate::Rate;
 
 mod coin_market_cap;
+mod coin_desk;
 
+use rate;
 
 trait RateProvider {
-    fn get() -> Option<Vec<Rate>>;
+    fn get() -> Option<Vec<rate::Rate>>;
 
     fn download<'a>(url: &'a str) -> String {
         let mut handle = Easy::new();
@@ -28,8 +29,8 @@ trait RateProvider {
     }
 
 
-    fn convert(response: &str) -> Option<Vec<Rate>> {
-        let deserialized_result: serde_json::Result<Vec<Rate>> = serde_json::from_str(&response);
+    fn convert(response: &str) -> Option<Vec<rate::Rate>> {
+        let deserialized_result: serde_json::Result<Vec<rate::Rate>> = serde_json::from_str(&response);
 
         match deserialized_result {
             Ok(deserialized) => Some(deserialized),
@@ -42,23 +43,7 @@ trait RateProvider {
 }
 
 
-pub fn get() -> Option<Vec<Rate>> {
-    coin_market_cap::CoinMarketCap::get()
+pub fn get() -> Option<Vec<rate::Rate>> {
+//    coin_market_cap::CoinMarketCap::get()
+    coin_desk::CoinDesk::get()
 }
-
-
-//fn download_and_convert<'a, T>(url: &'a str) -> Option<Vec<T>>
-//    where T: serde::de::Deserialize<'a> {
-//    let output: String = download(url);
-//    let deserialized_result: serde_json::Result<Vec<T>> = serde_json::from_str(&output);
-//
-//    println!("{:?}", output);
-//
-//    match deserialized_result {
-//        Ok(deserialized) => Some(deserialized),
-//        Err(e) => {
-//            print!("{:?}", e);
-//            None
-//        }
-//    }
-//}

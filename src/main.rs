@@ -8,7 +8,7 @@ mod rate;
 mod rate_provider;
 mod util;
 
-use rate::Rate;
+//use rate::Rate;
 use std::{thread, time};
 
 fn get_and_print_rates() -> Result<(), ()> {

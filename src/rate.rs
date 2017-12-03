@@ -13,3 +13,16 @@ pub struct Rate {
     // "7278.69583695",
     pub price_eur: String,
 }
+
+impl Rate {
+    pub fn new(price_usd: &str, price_eur: &str) -> Self {
+        Rate {
+            id: "bitcoin".to_owned(),
+            name: "Bitcoin".to_owned(),
+            symbol: "BTC".to_owned(),
+            price_btc: "1.0".to_owned(),
+            price_usd: price_usd.to_string(),
+            price_eur: price_eur.to_string(),
+        }
+    }
+}
