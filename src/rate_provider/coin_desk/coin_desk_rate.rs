@@ -28,8 +28,8 @@ use std::collections::HashMap;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Bpi {
     pub code: String,
-    pub rate: String,
-    pub rate_float: f32,
+    #[serde(rename = "rate_float")]
+    pub rate: f32,
 }
 
 // Flexible type
@@ -37,7 +37,7 @@ pub struct Bpi {
 
 // Strict type - easy for mapping
 #[derive(Serialize, Deserialize, Debug)]
-pub struct  BpiMap {
+pub struct BpiMap {
     #[serde(rename = "USD")]
     pub usd: Bpi,
     #[serde(rename = "EUR")]

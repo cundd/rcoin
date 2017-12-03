@@ -29,8 +29,8 @@ impl super::RateProvider for CoinDesk {
         let internal_rate = Self::convert_to_internal_rate(response);
         if let Some(internal_rate) = internal_rate {
             return Some(vec![rate::Rate::new(
-                &internal_rate.bpi.usd.rate,
-                &internal_rate.bpi.eur.rate,
+                internal_rate.bpi.usd.rate,
+                internal_rate.bpi.eur.rate,
             )]);
         }
 

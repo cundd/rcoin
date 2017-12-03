@@ -21,8 +21,8 @@ fn get_and_print_rates() -> Result<(), ()> {
             println!(
                 "{} Price USD: {} /  Price EUR: {}",
                 util::str_pad(&rate.symbol, 5, ' '),
-                util::str_pad(&rate.price_usd, 10, ' '),
-                util::str_pad(&rate.price_eur, 10, ' ')
+                util::str_pad(&rate.price_usd.to_string(), 10, ' '),
+                util::str_pad(&rate.price_eur.to_string(), 10, ' ')
             );
         }
 
