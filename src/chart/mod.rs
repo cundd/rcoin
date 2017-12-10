@@ -1,72 +1,39 @@
-use std::collections::BTreeMap;
-
+mod canvas;
 mod point;
 mod point_matrix;
 
 pub use self::point::Point;
-
-type PointRow<'a> = BTreeMap<usize, &'a Point>;
-
-use self::point_matrix::PointMatrixTrait;
-use self::point_matrix::PointMatrix;
-
-
-//pub type DrawCallback = Fn(point: & Point) -> usize ;
-
-
-pub struct Chart {
-    width: usize,
-    height: usize,
-}
+use self::canvas::Canvas;
 
 const BLOCK_FULL: &'static str = "\u{2588}";
 const BLOCK_UPPER_HALF: &'static str = "\u{2580}";
 const BLOCK_LOWER_HALF: &'static str = "\u{2584}";
 
+pub struct Chart {
+    width: usize,
+    height: usize,
+    canvas: Canvas,
+}
+
 impl Chart {
     pub fn new(width: usize, height: usize) -> Self {
-        Chart { width, height }
+        let canvas = Canvas::new(width, height);
+        Chart { width, height, canvas }
     }
 
     #[allow(dead_code)]
     pub fn draw_points(&self, points: Vec<&Point>) {
-        self.draw_points_with_callback(points, |point: Option<Point>| {
-            match point {
-                Some(_) => print!("{}", BLOCK_FULL),
-                None => print!(" "),
-            }
-        })
+        self.canvas.draw_points(points)
     }
 
     #[allow(dead_code)]
     pub fn draw_points_with_symbol(&self, points: Vec<&Point>, symbol: &str) {
-        self.draw_points_with_callback(points, |point: Option<Point>| {
-            match point {
-                Some(_) => print!("{}", symbol),
-                None => print!(" "),
-            }
-        })
+        self.canvas.draw_points_with_symbol(points, symbol)
     }
 
     #[allow(dead_code)]
     pub fn draw_points_with_callback<F>(&self, points: Vec<&Point>, draw_callback: F)
         where F: Fn(Option<Point>) {
-        let matrix = PointMatrix::new_from_vec(points);
-
-        for n in 0..self.height {
-            self.draw_row(n, &matrix, &draw_callback);
-            println!();
-        }
-    }
-
-    fn draw_row<F>(&self, row: usize, matrix: &PointMatrix, draw_callback: &F)
-        where F: Fn(Option<Point>) {
-        for column in 0..self.width {
-            draw_callback(matrix.get(row, column));
-//            if let Some(p) = matrix.get(row, column) {
-//            } else {
-//                print!(" ");
-//            }
-        }
+        self.canvas.draw_points_with_callback(points, &draw_callback)
     }
 }

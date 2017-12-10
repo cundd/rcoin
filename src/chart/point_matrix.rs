@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
-use super::PointRow;
 use super::Point;
+
+type PointRow<'a> = BTreeMap<usize, &'a Point>;
 
 pub trait PointMatrixTrait {
     fn get(&self, row: usize, column: usize) -> Option<Point>;
