@@ -1,14 +1,15 @@
 use std::collections::BTreeMap;
 
 mod point;
+mod point_matrix;
 
 pub use self::point::Point;
 
 type PointRow<'a> = BTreeMap<usize, &'a Point>;
 
-struct PointMatrix<'a> {
-    rows: BTreeMap<usize, PointRow<'a>>,
-}
+use self::point_matrix::PointMatrixTrait;
+use self::point_matrix::PointMatrix;
+
 
 pub struct Chart {
     width: usize,
@@ -18,15 +19,6 @@ pub struct Chart {
 const BLOCK_FULL: &'static str = "\u{2588}";
 const BLOCK_UPPER_HALF: &'static str = "\u{2580}";
 const BLOCK_LOWER_HALF: &'static str = "\u{2584}";
-
-
-fn build_rows<'a>(chart: &Chart, points: Vec<&'a Point>) -> PointRow<'a> {
-    let mut row = PointRow::new();
-
-    for point in points {}
-
-    row
-}
 
 fn sort_points<'a>(chart: &Chart, points: Vec<&'a Point>) -> PointMatrix<'a> {
     let mut rows: BTreeMap<usize, PointRow> = BTreeMap::new();
@@ -48,7 +40,7 @@ fn sort_points<'a>(chart: &Chart, points: Vec<&'a Point>) -> PointMatrix<'a> {
         }
     }
 
-    PointMatrix { rows }
+    PointMatrix::new(rows)
 }
 
 
@@ -58,33 +50,21 @@ impl Chart {
     }
 
     pub fn draw_points(&self, points: Vec<&Point>) {
-//        print!("{}", BLOCK_UPPER_HALF);
-//        print!("{}", BLOCK_LOWER_HALF);
-//        print!("{}", BLOCK_FULL);
-
         let matrix = sort_points(self, points);
 
         for n in 0..self.height {
-            if let Some(row) = matrix.rows.get(&n) {
-                self.draw_row(row);
-                println!();
-            } else {
-                println!();
-            }
+            self.draw_row(n, &matrix);
+            println!();
         }
-
-//        for point in points {
-//            self.draw_point(point)
-//        }
     }
 
     pub fn draw_point(&self, point: &Point) {
         self.draw_points(vec![point]);
     }
 
-    fn draw_row(&self, row: &PointRow) {
-        for n in 0..self.width {
-            if let Some(p) = row.get(&n) {
+    fn draw_row(&self, row: usize, matrix: &PointMatrix) {
+        for column in 0..self.width {
+            if let Some(p) = matrix.get(row, column) {
                 print!("{}", BLOCK_FULL);
             } else {
                 print!(" ");

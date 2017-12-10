@@ -58,7 +58,12 @@ fn main() {
             &chart::Point::new(2, 2),
             &chart::Point::new(1, 1),
             &chart::Point::new(10, 20),
-            &chart::Point::new(10, 20),
+            &chart::Point::new(12, 20),
+            &chart::Point::new(14, 20),
+            &chart::Point::new(11, 20),
+            &chart::Point::new(99, 20),
+            &chart::Point::new(100, 20),
+            &chart::Point::new(101, 20),
         ]);
 
         break;
