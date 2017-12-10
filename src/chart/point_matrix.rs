@@ -12,8 +12,31 @@ pub struct PointMatrix<'a> {
 }
 
 impl<'a> PointMatrix<'a> {
-    pub fn new(rows: BTreeMap<usize, PointRow<'a>>) -> PointMatrix {
+    pub fn new(rows: BTreeMap<usize, PointRow<'a>>) -> Self {
         PointMatrix { rows }
+    }
+
+    pub fn new_from_vec(points: Vec<&'a Point>) -> Self {
+        let mut rows: BTreeMap<usize, PointRow> = BTreeMap::new();
+
+        for point in points {
+            let mut handled = false;
+
+            {
+                let row_option = rows.get_mut(&point.y);
+                if let Some(row) = row_option {
+                    row.insert(point.x, point);
+                    handled = true;
+                }
+            }
+            if !handled {
+                let mut row = PointRow::new();
+                row.insert(point.x, point);
+                rows.insert(point.y, row);
+            }
+        }
+
+        PointMatrix::new(rows)
     }
 
     fn get(&self, row: usize, column: usize) -> Option<Point> {

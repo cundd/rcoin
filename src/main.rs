@@ -9,8 +9,8 @@ mod rate_provider;
 mod util;
 mod chart;
 
-//use rate::Rate;
 use std::{thread, time};
+use chart::Point;
 
 fn get_and_print_rates(last_rate_option: Result<rate::Rate, ()>) -> Result<rate::Rate, ()> {
     let result = rate_provider::get();
@@ -53,18 +53,21 @@ fn main() {
     let chart = chart::Chart::new(100, 30);
     let mut last_rate_option: Result<rate::Rate, ()> = Err(());
     loop {
-        chart.draw_points(vec![
-            &chart::Point::new(0, 0),
-            &chart::Point::new(2, 2),
-            &chart::Point::new(1, 1),
-            &chart::Point::new(10, 20),
-            &chart::Point::new(12, 20),
-            &chart::Point::new(14, 20),
-            &chart::Point::new(11, 20),
-            &chart::Point::new(99, 20),
-            &chart::Point::new(100, 20),
-            &chart::Point::new(101, 20),
-        ]);
+        chart.draw_points_with_symbol(
+            vec![
+                &chart::Point::new(0, 0),
+                &chart::Point::new(2, 2),
+                &chart::Point::new(1, 1),
+                &chart::Point::new(10, 20),
+                &chart::Point::new(12, 20),
+                &chart::Point::new(14, 20),
+                &chart::Point::new(11, 20),
+                &chart::Point::new(99, 20),
+                &chart::Point::new(100, 20),
+                &chart::Point::new(101, 20)
+            ],
+            "😊"
+        );
 
         break;
 
