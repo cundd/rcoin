@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-
+//use std::collections::HashMap;
 // https://api.coindesk.com/v1/bpi/currentprice/CNY.json
 
 //{

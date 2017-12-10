@@ -9,7 +9,13 @@ mod coin_desk;
 use rate;
 
 trait RateProvider {
-    fn get() -> Option<Vec<rate::Rate>>;
+    fn get() -> Option<rate::Rate>;
+    fn get_all() -> Option<Vec<rate::Rate>> {
+        if let Some(single) = Self::get() {
+            return Some(vec![single]);
+        }
+        None
+    }
 
     fn download<'a>(url: &'a str) -> String {
         let mut handle = Easy::new();
@@ -28,8 +34,9 @@ trait RateProvider {
         output
     }
 
+    fn convert(response: &str) -> Option<rate::Rate>;
 
-    fn convert(response: &str) -> Option<Vec<rate::Rate>> {
+    fn convert_all(response: &str) -> Option<Vec<rate::Rate>> {
         let deserialized_result: serde_json::Result<Vec<rate::Rate>> = serde_json::from_str(&response);
 
         match deserialized_result {
@@ -43,7 +50,7 @@ trait RateProvider {
 }
 
 
-pub fn get() -> Option<Vec<rate::Rate>> {
-//    coin_market_cap::CoinMarketCap::get()
+pub fn get() -> Option<rate::Rate> {
+    //    coin_market_cap::CoinMarketCap::get()
     coin_desk::CoinDesk::get()
 }

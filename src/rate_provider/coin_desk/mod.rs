@@ -21,17 +21,17 @@ impl CoinDesk {
 }
 
 impl super::RateProvider for CoinDesk {
-    fn get() -> Option<Vec<rate::Rate>> {
+    fn get() -> Option<rate::Rate> {
         let response = Self::download("https://api.coindesk.com/v1/bpi/currentprice/EUR.json");
         Self::convert(&response)
     }
-    fn convert(response: &str) -> Option<Vec<rate::Rate>> {
+    fn convert(response: &str) -> Option<rate::Rate> {
         let internal_rate = Self::convert_to_internal_rate(response);
         if let Some(internal_rate) = internal_rate {
-            return Some(vec![rate::Rate::new(
+            return Some(rate::Rate::new(
                 internal_rate.bpi.usd.rate,
                 internal_rate.bpi.eur.rate,
-            )]);
+            ));
         }
 
         None
