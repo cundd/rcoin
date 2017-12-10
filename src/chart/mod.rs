@@ -22,18 +22,18 @@ impl Chart {
     }
 
     #[allow(dead_code)]
-    pub fn draw_points(&self, points: Vec<&Point>) {
+    pub fn draw_points(&self, points: Vec<&Point>) -> String {
         self.canvas.draw_points(points)
     }
 
     #[allow(dead_code)]
-    pub fn draw_points_with_symbol(&self, points: Vec<&Point>, symbol: &str) {
+    pub fn draw_points_with_symbol(&self, points: Vec<&Point>, symbol: &str) -> String {
         self.canvas.draw_points_with_symbol(points, symbol)
     }
 
     #[allow(dead_code)]
-    pub fn draw_points_with_callback<F>(&self, points: Vec<&Point>, draw_callback: F)
-        where F: Fn(Option<Point>) {
+    pub fn draw_points_with_callback<F>(&self, points: Vec<&Point>, draw_callback: F) -> String
+        where F: Fn(Option<Point>) -> String {
         self.canvas.draw_points_with_callback(points, &draw_callback)
     }
 }
