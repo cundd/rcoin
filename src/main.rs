@@ -50,7 +50,7 @@ fn get_trend(current_rate: &rate::Rate, last_rate_option: Result<rate::Rate, ()>
 }
 
 fn main() {
-    let chart = chart::Chart::new(100, 30, chart::Mode::Truncate);
+    let chart = chart::Chart::new(30, 30, chart::Mode::ScaleDownX);
     let mut last_rate_option: Result<rate::Rate, ()> = Err(());
     loop {
         print!(

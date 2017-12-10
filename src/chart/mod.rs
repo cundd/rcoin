@@ -5,6 +5,7 @@ mod transform;
 
 pub use self::point::Point;
 use self::canvas::Canvas;
+use self::point_matrix::PointMatrix;
 
 #[allow(dead_code)]
 const BLOCK_FULL: &'static str = "\u{2588}";
@@ -15,7 +16,9 @@ const BLOCK_LOWER_HALF: &'static str = "\u{2584}";
 
 pub enum Mode {
     Truncate,
-    Scale,
+    ScaleDownX,
+    ScaleDownY,
+    ScaleDown,
 }
 
 pub struct Chart {
@@ -33,34 +36,50 @@ impl Chart {
 
     #[allow(dead_code)]
     pub fn draw_points(&self, points: Vec<Point>) -> String {
+        let matrix = PointMatrix::new_from_vec(points);
+
         match self.mode {
-            Mode::Truncate => self.canvas.draw_points(points),
-            Mode::Scale => "not implemented".to_string(),
+            Mode::Truncate => self.canvas.draw_points(matrix),
+            Mode::ScaleDownX => self.canvas.draw_points(transform::scale_x(self, &matrix)),
+            Mode::ScaleDownY => self.canvas.draw_points(transform::scale_y(self, &matrix)),
+            Mode::ScaleDown => self.canvas.draw_points(transform::scale(self, &matrix)),
         }
     }
 
     #[allow(dead_code)]
     pub fn draw_points_with_symbol(&self, points: Vec<Point>, symbol: &str) -> String {
+        let matrix = PointMatrix::new_from_vec(points);
+
         match self.mode {
-            Mode::Truncate => self.canvas.draw_points_with_symbol(points, symbol),
-            Mode::Scale => "not implemented".to_string(),
+            Mode::Truncate => self.canvas.draw_points_with_symbol(matrix, symbol),
+            Mode::ScaleDownX => self.canvas.draw_points_with_symbol(transform::scale_x(self, &matrix), symbol),
+            Mode::ScaleDownY => self.canvas.draw_points_with_symbol(transform::scale_y(self, &matrix), symbol),
+            Mode::ScaleDown => self.canvas.draw_points_with_symbol(transform::scale(self, &matrix), symbol),
         }
     }
 
     #[allow(dead_code)]
     pub fn draw_points_with_symbols(&self, points: Vec<Point>, point_symbol: &str, placeholder: &str) -> String {
+        let matrix = PointMatrix::new_from_vec(points);
+
         match self.mode {
-            Mode::Truncate => self.canvas.draw_points_with_symbols(points, point_symbol, placeholder),
-            Mode::Scale => "not implemented".to_string(),
+            Mode::Truncate => self.canvas.draw_points_with_symbols(matrix, point_symbol, placeholder),
+            Mode::ScaleDownX => self.canvas.draw_points_with_symbols(transform::scale_x(self, &matrix), point_symbol, placeholder),
+            Mode::ScaleDownY => self.canvas.draw_points_with_symbols(transform::scale_y(self, &matrix), point_symbol, placeholder),
+            Mode::ScaleDown => self.canvas.draw_points_with_symbols(transform::scale(self, &matrix), point_symbol, placeholder),
         }
     }
 
     #[allow(dead_code)]
     pub fn draw_points_with_callback<F>(&self, points: Vec<Point>, draw_callback: F) -> String
         where F: Fn(Option<Point>) -> String {
+        let matrix = PointMatrix::new_from_vec(points);
+
         match self.mode {
-            Mode::Truncate => self.canvas.draw_points_with_callback(points, &draw_callback),
-            Mode::Scale => "not implemented".to_string(),
+            Mode::Truncate => self.canvas.draw_points_with_callback(matrix, &draw_callback),
+            Mode::ScaleDownX => self.canvas.draw_points_with_callback(transform::scale_x(self, &matrix), &draw_callback),
+            Mode::ScaleDownY => self.canvas.draw_points_with_callback(transform::scale_y(self, &matrix), &draw_callback),
+            Mode::ScaleDown => self.canvas.draw_points_with_callback(transform::scale(self, &matrix), &draw_callback),
         }
     }
 }
