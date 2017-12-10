@@ -37,3 +37,100 @@ impl Chart {
         self.canvas.draw_points_with_callback(points, &draw_callback)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn draw_points_with_symbol_test() {
+        let canvas = Chart::new(10, 2);
+
+        assert_eq!(
+            ".         \n .        \n",
+            canvas.draw_points_with_symbol(
+                vec![
+                    &Point::new(0, 0),
+                    &Point::new(1, 1),
+                    &Point::new(2, 2),      // Will be clipped
+                    &Point::new(10, 20),    // Will be clipped
+                    &Point::new(12, 20),    // Will be clipped
+                    &Point::new(14, 20),    // Will be clipped
+                    &Point::new(11, 20),    // Will be clipped
+                    &Point::new(99, 20),    // Will be clipped
+                    &Point::new(100, 20),   // Will be clipped
+                    &Point::new(101, 20)    // Will be clipped
+                ],
+                "."
+            )
+        );
+
+        assert_eq!(
+            "😊         \n 😊        \n",
+            canvas.draw_points_with_symbol(
+                vec![
+                    &Point::new(0, 0),
+                    &Point::new(1, 1),
+                    &Point::new(2, 2),      // Will be clipped
+                    &Point::new(10, 20),    // Will be clipped
+                    &Point::new(12, 20),    // Will be clipped
+                    &Point::new(14, 20),    // Will be clipped
+                    &Point::new(11, 20),    // Will be clipped
+                    &Point::new(99, 20),    // Will be clipped
+                    &Point::new(100, 20),   // Will be clipped
+                    &Point::new(101, 20)    // Will be clipped
+                ],
+                "😊"
+            )
+        );
+
+        assert_eq!(
+            "😊         \n 😊       😊\n",
+            canvas.draw_points_with_symbol(
+                vec![
+                    &Point::new(0, 0),
+                    &Point::new(1, 1),
+                    &Point::new(9, 1),
+                    &Point::new(2, 2),      // Will be clipped
+                    &Point::new(10, 20),    // Will be clipped
+                    &Point::new(12, 20),    // Will be clipped
+                    &Point::new(14, 20),    // Will be clipped
+                    &Point::new(11, 20),    // Will be clipped
+                    &Point::new(99, 20),    // Will be clipped
+                    &Point::new(100, 20),   // Will be clipped
+                    &Point::new(101, 20)    // Will be clipped
+                ],
+                "😊"
+            )
+        );
+    }
+
+    #[test]
+    fn draw_points_with_callback_test() {
+        let canvas = Chart::new(10, 2);
+
+        assert_eq!(
+            "x_________\n_x________\n",
+            canvas.draw_points_with_callback(
+                vec![
+                    &Point::new(0, 0),
+                    &Point::new(1, 1),
+                    &Point::new(2, 2),      // Will be clipped
+                    &Point::new(10, 20),    // Will be clipped
+                    &Point::new(12, 20),    // Will be clipped
+                    &Point::new(14, 20),    // Will be clipped
+                    &Point::new(11, 20),    // Will be clipped
+                    &Point::new(99, 20),    // Will be clipped
+                    &Point::new(100, 20),   // Will be clipped
+                    &Point::new(101, 20)    // Will be clipped
+                ],
+                |point: Option<Point>| {
+                    match point {
+                        Some(_) => "x".to_string(),
+                        None => "_".to_string(),
+                    }
+                }
+            )
+        );
+    }
+}

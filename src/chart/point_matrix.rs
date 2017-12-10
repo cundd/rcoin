@@ -11,9 +11,9 @@ pub trait PointMatrixTrait {
     fn x_max(&self) -> Option<usize>;
     fn y_max(&self) -> Option<usize>;
     fn x_y_max(&self) -> Option<(usize, usize)>;
-    fn x_y_max_point(&self) -> Option<Point>;
 }
 
+#[derive(Debug)]
 pub struct PointMatrix<'a> {
     rows: BTreeMap<usize, PointRow<'a>>,
 }
@@ -101,14 +101,6 @@ impl<'a> PointMatrix<'a> {
         Some((self.x_max().unwrap(), self.y_max().unwrap()))
     }
 
-    fn x_y_max_point(&self) -> Option<Point> {
-        if self.is_empty() {
-            return None;
-        }
-
-        self.get(self.y_max().unwrap(), self.x_max().unwrap())
-    }
-
     fn is_empty(&self) -> bool {
         if self.rows.len() == 0 {
             return true;
@@ -122,9 +114,11 @@ impl<'a> PointMatrixTrait for PointMatrix<'a> {
     fn get(&self, row: usize, column: usize) -> Option<Point> {
         PointMatrix::get(self, row, column)
     }
+
     fn has(&self, row: usize, column: usize) -> bool {
         PointMatrix::has(self, row, column)
     }
+
     fn x_max(&self) -> Option<usize> {
         PointMatrix::x_max(self)
     }
@@ -133,13 +127,11 @@ impl<'a> PointMatrixTrait for PointMatrix<'a> {
     fn y_max(&self) -> Option<usize> {
         PointMatrix::y_max(self)
     }
+
     fn x_y_max(&self) -> Option<(usize, usize)> {
         PointMatrix::x_y_max(self)
     }
 
-    fn x_y_max_point(&self) -> Option<Point> {
-        PointMatrix::x_y_max_point(self)
-    }
     fn is_empty(&self) -> bool {
         PointMatrix::is_empty(self)
     }
@@ -153,6 +145,7 @@ impl<'a> PointMatrixTrait for &'a PointMatrix<'a> {
     fn has(&self, row: usize, column: usize) -> bool {
         PointMatrix::has(self, row, column)
     }
+
     fn x_max(&self) -> Option<usize> {
         PointMatrix::x_max(self)
     }
@@ -160,12 +153,9 @@ impl<'a> PointMatrixTrait for &'a PointMatrix<'a> {
     fn y_max(&self) -> Option<usize> {
         PointMatrix::y_max(self)
     }
+
     fn x_y_max(&self) -> Option<(usize, usize)> {
         PointMatrix::x_y_max(self)
-    }
-
-    fn x_y_max_point(&self) -> Option<Point> {
-        PointMatrix::x_y_max_point(self)
     }
 
     fn is_empty(&self) -> bool {
@@ -188,7 +178,22 @@ mod tests {
             Point::new(11, 20),
             Point::new(99, 20),
             Point::new(100, 20),
-            Point::new(101, 20)
+            Point::new(101, 18)
+        ]
+    }
+
+    fn build_min_test_vec() -> Vec<Point> {
+        vec![
+            Point::new(8, 10),
+            Point::new(10, 4),
+            Point::new(12, 5),
+            Point::new(10, 20),
+            Point::new(12, 20),
+            Point::new(14, 20),
+            Point::new(11, 20),
+            Point::new(99, 20),
+            Point::new(100, 20),
+            Point::new(101, 18)
         ]
     }
 
@@ -198,7 +203,12 @@ mod tests {
         {
             let test_vec = build_test_vec();
             let matrix = PointMatrix::new_from_vec(test_vec.iter().collect());
-            assert!(!matrix.is_empty());
+            assert_eq!(false, matrix.is_empty());
+        }
+        {
+            let test_vec = build_min_test_vec();
+            let matrix = PointMatrix::new_from_vec(test_vec.iter().collect());
+            assert_eq!(false, matrix.is_empty());
         }
         {
             assert!(PointMatrix::new(BTreeMap::new()).is_empty());
@@ -232,12 +242,5 @@ mod tests {
         let test_vec = build_test_vec();
         let matrix = PointMatrix::new_from_vec(test_vec.iter().collect());
         assert_eq!((101, 20), matrix.x_y_max().unwrap());
-    }
-
-    #[test]
-    fn x_y_max_point_test() {
-        let test_vec = build_test_vec();
-        let matrix = PointMatrix::new_from_vec(test_vec.iter().collect());
-        assert_eq!(Point { x: 101, y: 20 }, matrix.x_y_max_point().unwrap());
     }
 }
