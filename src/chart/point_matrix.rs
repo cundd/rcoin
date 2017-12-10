@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use super::Point;
 
-type PointRow<'a> = BTreeMap<usize, &'a Point>;
+type PointRow = BTreeMap<usize, Point>;
 
 pub trait PointMatrixTrait {
     fn get(&self, row: usize, column: usize) -> Option<Point>;
@@ -17,17 +17,17 @@ pub trait PointMatrixTrait {
     fn x_y_min(&self) -> Option<(usize, usize)>;
 }
 
-#[derive(Debug)]
-pub struct PointMatrix<'a> {
-    rows: BTreeMap<usize, PointRow<'a>>,
+#[derive(Debug, Clone)]
+pub struct PointMatrix {
+    rows: BTreeMap<usize, PointRow>,
 }
 
-impl<'a> PointMatrix<'a> {
-    pub fn new(rows: BTreeMap<usize, PointRow<'a>>) -> Self {
+impl PointMatrix {
+    pub fn new(rows: BTreeMap<usize, PointRow>) -> Self {
         PointMatrix { rows }
     }
 
-    pub fn new_from_vec(points: Vec<&'a Point>) -> Self {
+    pub fn new_from_vec(points: Vec<Point>) -> Self {
         let mut rows: BTreeMap<usize, PointRow> = BTreeMap::new();
 
         for point in points {
@@ -151,7 +151,7 @@ impl<'a> PointMatrix<'a> {
     }
 }
 
-impl<'a> PointMatrixTrait for PointMatrix<'a> {
+impl PointMatrixTrait for PointMatrix {
     fn get(&self, row: usize, column: usize) -> Option<Point> {
         PointMatrix::get(self, row, column)
     }
@@ -190,7 +190,7 @@ impl<'a> PointMatrixTrait for PointMatrix<'a> {
     }
 }
 
-impl<'a> PointMatrixTrait for &'a PointMatrix<'a> {
+impl<'a> PointMatrixTrait for &'a PointMatrix {
     fn get(&self, row: usize, column: usize) -> Option<Point> {
         PointMatrix::get(self, row, column)
     }
@@ -266,13 +266,11 @@ mod tests {
     #[test]
     fn is_empty_test() {
         {
-            let test_vec = build_test_vec();
-            let matrix = PointMatrix::new_from_vec(test_vec.iter().collect());
+            let matrix = PointMatrix::new_from_vec(build_test_vec());
             assert_eq!(false, matrix.is_empty());
         }
         {
-            let test_vec = build_min_test_vec();
-            let matrix = PointMatrix::new_from_vec(test_vec.iter().collect());
+            let matrix = PointMatrix::new_from_vec(build_min_test_vec());
             assert_eq!(false, matrix.is_empty());
         }
         {
@@ -290,43 +288,37 @@ mod tests {
 
     #[test]
     fn x_max_test() {
-        let test_vec = build_test_vec();
-        let matrix = PointMatrix::new_from_vec(test_vec.iter().collect());
+        let matrix = PointMatrix::new_from_vec(build_test_vec());
         assert_eq!(101, matrix.x_max().unwrap());
     }
 
     #[test]
     fn y_max_test() {
-        let test_vec = build_test_vec();
-        let matrix = PointMatrix::new_from_vec(test_vec.iter().collect());
+        let matrix = PointMatrix::new_from_vec(build_test_vec());
         assert_eq!(20, matrix.y_max().unwrap());
     }
 
     #[test]
     fn x_y_max_test() {
-        let test_vec = build_test_vec();
-        let matrix = PointMatrix::new_from_vec(test_vec.iter().collect());
+        let matrix = PointMatrix::new_from_vec(build_test_vec());
         assert_eq!((101, 20), matrix.x_y_max().unwrap());
     }
 
     #[test]
     fn x_min_test() {
-        let test_vec = build_min_test_vec();
-        let matrix = PointMatrix::new_from_vec(test_vec.iter().collect());
+        let matrix = PointMatrix::new_from_vec(build_min_test_vec());
         assert_eq!(8, matrix.x_min().unwrap());
     }
 
     #[test]
     fn y_min_test() {
-        let test_vec = build_min_test_vec();
-        let matrix = PointMatrix::new_from_vec(test_vec.iter().collect());
+        let matrix = PointMatrix::new_from_vec(build_min_test_vec());
         assert_eq!(4, matrix.y_min().unwrap());
     }
 
     #[test]
     fn x_y_min_test() {
-        let test_vec = build_min_test_vec();
-        let matrix = PointMatrix::new_from_vec(test_vec.iter().collect());
+        let matrix = PointMatrix::new_from_vec(build_min_test_vec());
         assert_eq!((8, 4), matrix.x_y_min().unwrap());
     }
 }

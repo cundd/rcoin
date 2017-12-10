@@ -13,7 +13,7 @@ impl Canvas {
         Canvas { width, height }
     }
 
-    pub fn draw_points(&self, points: Vec<&Point>) -> String {
+    pub fn draw_points(&self, points: Vec<Point>) -> String {
         self.draw_points_with_callback(points, |point: Option<Point>| {
             match point {
                 Some(_) => super::BLOCK_FULL.to_string(),
@@ -22,7 +22,7 @@ impl Canvas {
         })
     }
 
-    pub fn draw_points_with_symbol(&self, points: Vec<&Point>, symbol: &str) -> String {
+    pub fn draw_points_with_symbol(&self, points: Vec<Point>, symbol: &str) -> String {
         self.draw_points_with_callback(points, |point: Option<Point>| {
             match point {
                 Some(_) => symbol.to_string(),
@@ -31,7 +31,7 @@ impl Canvas {
         })
     }
 
-    pub fn draw_points_with_symbols(&self, points: Vec<&Point>, point_symbol: &str, placeholder: &str) -> String {
+    pub fn draw_points_with_symbols(&self, points: Vec<Point>, point_symbol: &str, placeholder: &str) -> String {
         self.draw_points_with_callback(points, |point: Option<Point>| {
             match point {
                 Some(_) => point_symbol.to_string(),
@@ -40,7 +40,7 @@ impl Canvas {
         })
     }
 
-    pub fn draw_points_with_callback<F>(&self, points: Vec<&Point>, draw_callback: F) -> String
+    pub fn draw_points_with_callback<F>(&self, points: Vec<Point>, draw_callback: F) -> String
         where F: Fn(Option<Point>) -> String {
         let mut buffer = String::with_capacity(self.width * self.height);
         let matrix = PointMatrix::new_from_vec(points);
@@ -77,16 +77,16 @@ mod tests {
             ".         \n .        \n",
             canvas.draw_points_with_symbol(
                 vec![
-                    &Point::new(0, 0),
-                    &Point::new(1, 1),
-                    &Point::new(2, 2),      // Will be clipped
-                    &Point::new(10, 20),    // Will be clipped
-                    &Point::new(12, 20),    // Will be clipped
-                    &Point::new(14, 20),    // Will be clipped
-                    &Point::new(11, 20),    // Will be clipped
-                    &Point::new(99, 20),    // Will be clipped
-                    &Point::new(100, 20),   // Will be clipped
-                    &Point::new(101, 20)    // Will be clipped
+                    Point::new(0, 0),
+                    Point::new(1, 1),
+                    Point::new(2, 2),      // Will be clipped
+                    Point::new(10, 20),    // Will be clipped
+                    Point::new(12, 20),    // Will be clipped
+                    Point::new(14, 20),    // Will be clipped
+                    Point::new(11, 20),    // Will be clipped
+                    Point::new(99, 20),    // Will be clipped
+                    Point::new(100, 20),   // Will be clipped
+                    Point::new(101, 20)    // Will be clipped
                 ],
                 "."
             )
@@ -96,16 +96,16 @@ mod tests {
             "😊         \n 😊        \n",
             canvas.draw_points_with_symbol(
                 vec![
-                    &Point::new(0, 0),
-                    &Point::new(1, 1),
-                    &Point::new(2, 2),      // Will be clipped
-                    &Point::new(10, 20),    // Will be clipped
-                    &Point::new(12, 20),    // Will be clipped
-                    &Point::new(14, 20),    // Will be clipped
-                    &Point::new(11, 20),    // Will be clipped
-                    &Point::new(99, 20),    // Will be clipped
-                    &Point::new(100, 20),   // Will be clipped
-                    &Point::new(101, 20)    // Will be clipped
+                    Point::new(0, 0),
+                    Point::new(1, 1),
+                    Point::new(2, 2),      // Will be clipped
+                    Point::new(10, 20),    // Will be clipped
+                    Point::new(12, 20),    // Will be clipped
+                    Point::new(14, 20),    // Will be clipped
+                    Point::new(11, 20),    // Will be clipped
+                    Point::new(99, 20),    // Will be clipped
+                    Point::new(100, 20),   // Will be clipped
+                    Point::new(101, 20)    // Will be clipped
                 ],
                 "😊"
             )
@@ -115,17 +115,17 @@ mod tests {
             "😊         \n 😊       😊\n",
             canvas.draw_points_with_symbol(
                 vec![
-                    &Point::new(0, 0),
-                    &Point::new(1, 1),
-                    &Point::new(9, 1),
-                    &Point::new(2, 2),      // Will be clipped
-                    &Point::new(10, 20),    // Will be clipped
-                    &Point::new(12, 20),    // Will be clipped
-                    &Point::new(14, 20),    // Will be clipped
-                    &Point::new(11, 20),    // Will be clipped
-                    &Point::new(99, 20),    // Will be clipped
-                    &Point::new(100, 20),   // Will be clipped
-                    &Point::new(101, 20)    // Will be clipped
+                    Point::new(0, 0),
+                    Point::new(1, 1),
+                    Point::new(9, 1),
+                    Point::new(2, 2),      // Will be clipped
+                    Point::new(10, 20),    // Will be clipped
+                    Point::new(12, 20),    // Will be clipped
+                    Point::new(14, 20),    // Will be clipped
+                    Point::new(11, 20),    // Will be clipped
+                    Point::new(99, 20),    // Will be clipped
+                    Point::new(100, 20),   // Will be clipped
+                    Point::new(101, 20)    // Will be clipped
                 ],
                 "😊"
             )
@@ -140,16 +140,16 @@ mod tests {
             ".         \n .        \n",
             canvas.draw_points_with_symbols(
                 vec![
-                    &Point::new(0, 0),
-                    &Point::new(1, 1),
-                    &Point::new(2, 2),      // Will be clipped
-                    &Point::new(10, 20),    // Will be clipped
-                    &Point::new(12, 20),    // Will be clipped
-                    &Point::new(14, 20),    // Will be clipped
-                    &Point::new(11, 20),    // Will be clipped
-                    &Point::new(99, 20),    // Will be clipped
-                    &Point::new(100, 20),   // Will be clipped
-                    &Point::new(101, 20)    // Will be clipped
+                    Point::new(0, 0),
+                    Point::new(1, 1),
+                    Point::new(2, 2),      // Will be clipped
+                    Point::new(10, 20),    // Will be clipped
+                    Point::new(12, 20),    // Will be clipped
+                    Point::new(14, 20),    // Will be clipped
+                    Point::new(11, 20),    // Will be clipped
+                    Point::new(99, 20),    // Will be clipped
+                    Point::new(100, 20),   // Will be clipped
+                    Point::new(101, 20)    // Will be clipped
                 ],
                 ".",
                 " "
@@ -160,16 +160,16 @@ mod tests {
             "😊         \n 😊        \n",
             canvas.draw_points_with_symbols(
                 vec![
-                    &Point::new(0, 0),
-                    &Point::new(1, 1),
-                    &Point::new(2, 2),      // Will be clipped
-                    &Point::new(10, 20),    // Will be clipped
-                    &Point::new(12, 20),    // Will be clipped
-                    &Point::new(14, 20),    // Will be clipped
-                    &Point::new(11, 20),    // Will be clipped
-                    &Point::new(99, 20),    // Will be clipped
-                    &Point::new(100, 20),   // Will be clipped
-                    &Point::new(101, 20)    // Will be clipped
+                    Point::new(0, 0),
+                    Point::new(1, 1),
+                    Point::new(2, 2),      // Will be clipped
+                    Point::new(10, 20),    // Will be clipped
+                    Point::new(12, 20),    // Will be clipped
+                    Point::new(14, 20),    // Will be clipped
+                    Point::new(11, 20),    // Will be clipped
+                    Point::new(99, 20),    // Will be clipped
+                    Point::new(100, 20),   // Will be clipped
+                    Point::new(101, 20)    // Will be clipped
                 ],
                 "😊",
                 " "
@@ -180,17 +180,17 @@ mod tests {
             "😊_________\n_😊_______😊\n",
             canvas.draw_points_with_symbols(
                 vec![
-                    &Point::new(0, 0),
-                    &Point::new(1, 1),
-                    &Point::new(9, 1),
-                    &Point::new(2, 2),      // Will be clipped
-                    &Point::new(10, 20),    // Will be clipped
-                    &Point::new(12, 20),    // Will be clipped
-                    &Point::new(14, 20),    // Will be clipped
-                    &Point::new(11, 20),    // Will be clipped
-                    &Point::new(99, 20),    // Will be clipped
-                    &Point::new(100, 20),   // Will be clipped
-                    &Point::new(101, 20)    // Will be clipped
+                    Point::new(0, 0),
+                    Point::new(1, 1),
+                    Point::new(9, 1),
+                    Point::new(2, 2),      // Will be clipped
+                    Point::new(10, 20),    // Will be clipped
+                    Point::new(12, 20),    // Will be clipped
+                    Point::new(14, 20),    // Will be clipped
+                    Point::new(11, 20),    // Will be clipped
+                    Point::new(99, 20),    // Will be clipped
+                    Point::new(100, 20),   // Will be clipped
+                    Point::new(101, 20)    // Will be clipped
                 ],
                 "😊",
                 "_"
@@ -206,16 +206,16 @@ mod tests {
             "x_________\n_x________\n",
             canvas.draw_points_with_callback(
                 vec![
-                    &Point::new(0, 0),
-                    &Point::new(1, 1),
-                    &Point::new(2, 2),      // Will be clipped
-                    &Point::new(10, 20),    // Will be clipped
-                    &Point::new(12, 20),    // Will be clipped
-                    &Point::new(14, 20),    // Will be clipped
-                    &Point::new(11, 20),    // Will be clipped
-                    &Point::new(99, 20),    // Will be clipped
-                    &Point::new(100, 20),   // Will be clipped
-                    &Point::new(101, 20)    // Will be clipped
+                    Point::new(0, 0),
+                    Point::new(1, 1),
+                    Point::new(2, 2),      // Will be clipped
+                    Point::new(10, 20),    // Will be clipped
+                    Point::new(12, 20),    // Will be clipped
+                    Point::new(14, 20),    // Will be clipped
+                    Point::new(11, 20),    // Will be clipped
+                    Point::new(99, 20),    // Will be clipped
+                    Point::new(100, 20),   // Will be clipped
+                    Point::new(101, 20)    // Will be clipped
                 ],
                 |point: Option<Point>| {
                     match point {
