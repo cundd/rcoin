@@ -6,6 +6,12 @@ type PointRow<'a> = BTreeMap<usize, &'a Point>;
 pub trait PointMatrixTrait {
     fn get(&self, row: usize, column: usize) -> Option<Point>;
     fn has(&self, row: usize, column: usize) -> bool;
+
+    fn is_empty(&self) -> bool;
+    fn x_max(&self) -> Option<usize>;
+    fn y_max(&self) -> Option<usize>;
+    fn x_y_max(&self) -> Option<(usize, usize)>;
+    fn x_y_max_point(&self) -> Option<Point>;
 }
 
 pub struct PointMatrix<'a> {
@@ -61,6 +67,55 @@ impl<'a> PointMatrix<'a> {
             false
         }
     }
+
+    fn x_max(&self) -> Option<usize> {
+        if self.is_empty() {
+            return None;
+        }
+
+        let mut x_max: usize = 0;
+        for (_, row) in &self.rows {
+            if let Some(&current_x) = row.keys().rev().nth(0) {
+                if x_max < current_x {
+                    x_max = current_x;
+                }
+            }
+        }
+
+        Some(x_max)
+    }
+
+    fn y_max(&self) -> Option<usize> {
+        if let Some(y) = self.rows.keys().rev().nth(0) {
+            Some(*y)
+        } else {
+            None
+        }
+    }
+
+    fn x_y_max(&self) -> Option<(usize, usize)> {
+        if self.is_empty() {
+            return None;
+        }
+
+        Some((self.x_max().unwrap(), self.y_max().unwrap()))
+    }
+
+    fn x_y_max_point(&self) -> Option<Point> {
+        if self.is_empty() {
+            return None;
+        }
+
+        self.get(self.y_max().unwrap(), self.x_max().unwrap())
+    }
+
+    fn is_empty(&self) -> bool {
+        if self.rows.len() == 0 {
+            return true;
+        }
+
+        self.rows.iter().find(|&(_, row)| row.len() > 0).is_none()
+    }
 }
 
 impl<'a> PointMatrixTrait for PointMatrix<'a> {
@@ -69,6 +124,24 @@ impl<'a> PointMatrixTrait for PointMatrix<'a> {
     }
     fn has(&self, row: usize, column: usize) -> bool {
         PointMatrix::has(self, row, column)
+    }
+    fn x_max(&self) -> Option<usize> {
+        PointMatrix::x_max(self)
+    }
+
+
+    fn y_max(&self) -> Option<usize> {
+        PointMatrix::y_max(self)
+    }
+    fn x_y_max(&self) -> Option<(usize, usize)> {
+        PointMatrix::x_y_max(self)
+    }
+
+    fn x_y_max_point(&self) -> Option<Point> {
+        PointMatrix::x_y_max_point(self)
+    }
+    fn is_empty(&self) -> bool {
+        PointMatrix::is_empty(self)
     }
 }
 
@@ -79,5 +152,92 @@ impl<'a> PointMatrixTrait for &'a PointMatrix<'a> {
 
     fn has(&self, row: usize, column: usize) -> bool {
         PointMatrix::has(self, row, column)
+    }
+    fn x_max(&self) -> Option<usize> {
+        PointMatrix::x_max(self)
+    }
+
+    fn y_max(&self) -> Option<usize> {
+        PointMatrix::y_max(self)
+    }
+    fn x_y_max(&self) -> Option<(usize, usize)> {
+        PointMatrix::x_y_max(self)
+    }
+
+    fn x_y_max_point(&self) -> Option<Point> {
+        PointMatrix::x_y_max_point(self)
+    }
+
+    fn is_empty(&self) -> bool {
+        PointMatrix::is_empty(self)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn build_test_vec() -> Vec<Point> {
+        vec![
+            Point::new(0, 0),
+            Point::new(1, 1),
+            Point::new(2, 2),
+            Point::new(10, 20),
+            Point::new(12, 20),
+            Point::new(14, 20),
+            Point::new(11, 20),
+            Point::new(99, 20),
+            Point::new(100, 20),
+            Point::new(101, 20)
+        ]
+    }
+
+
+    #[test]
+    fn is_empty_test() {
+        {
+            let test_vec = build_test_vec();
+            let matrix = PointMatrix::new_from_vec(test_vec.iter().collect());
+            assert!(!matrix.is_empty());
+        }
+        {
+            assert!(PointMatrix::new(BTreeMap::new()).is_empty());
+        }
+        {
+            let mut rows = BTreeMap::new();
+            rows.insert(0, PointRow::new());
+            rows.insert(1, PointRow::new());
+            rows.insert(2, PointRow::new());
+            rows.insert(3, PointRow::new());
+            assert!(PointMatrix::new(rows).is_empty());
+        }
+    }
+
+    #[test]
+    fn x_max_test() {
+        let test_vec = build_test_vec();
+        let matrix = PointMatrix::new_from_vec(test_vec.iter().collect());
+        assert_eq!(101, matrix.x_max().unwrap());
+    }
+
+    #[test]
+    fn y_max_test() {
+        let test_vec = build_test_vec();
+        let matrix = PointMatrix::new_from_vec(test_vec.iter().collect());
+        assert_eq!(20, matrix.y_max().unwrap());
+    }
+
+    #[test]
+    fn x_y_max_test() {
+        let test_vec = build_test_vec();
+        let matrix = PointMatrix::new_from_vec(test_vec.iter().collect());
+        assert_eq!((101, 20), matrix.x_y_max().unwrap());
+    }
+
+    #[test]
+    fn x_y_max_point_test() {
+        let test_vec = build_test_vec();
+        let matrix = PointMatrix::new_from_vec(test_vec.iter().collect());
+        assert_eq!(Point { x: 101, y: 20 }, matrix.x_y_max_point().unwrap());
     }
 }
