@@ -1,13 +1,13 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 mod point;
 
 pub use self::point::Point;
 
-type PointRow<'a> = HashMap<usize, &'a Point>;
+type PointRow<'a> = BTreeMap<usize, &'a Point>;
 
 struct PointMatrix<'a> {
-    rows: HashMap<usize, PointRow<'a>>,
+    rows: BTreeMap<usize, PointRow<'a>>,
 }
 
 pub struct Chart {
@@ -21,7 +21,7 @@ const BLOCK_LOWER_HALF: &'static str = "\u{2584}";
 
 
 fn build_rows<'a>(chart: &Chart, points: Vec<&'a Point>) -> PointRow<'a> {
-    let mut row = PointRow::with_capacity(chart.width);
+    let mut row = PointRow::new();
 
     for point in points {}
 
@@ -29,29 +29,23 @@ fn build_rows<'a>(chart: &Chart, points: Vec<&'a Point>) -> PointRow<'a> {
 }
 
 fn sort_points<'a>(chart: &Chart, points: Vec<&'a Point>) -> PointMatrix<'a> {
-    let mut temp_rows: HashMap<usize, PointRow> = HashMap::with_capacity(chart.height);
+    let mut rows: BTreeMap<usize, PointRow> = BTreeMap::new();
 
     for point in points {
         let mut handled = false;
 
         {
-            let row_option = temp_rows.get_mut(&point.y);
+            let row_option = rows.get_mut(&point.y);
             if let Some(row) = row_option {
                 row.insert(point.x, point);
                 handled = true;
             }
         }
         if !handled {
-            let mut row = PointRow::with_capacity(chart.width);
+            let mut row = PointRow::new();
             row.insert(point.x, point);
-            temp_rows.insert(point.y, row);
+            rows.insert(point.y, row);
         }
-    }
-
-    let mut rows: HashMap<usize, PointRow> = HashMap::with_capacity(chart.height);
-    for (y, mut row) in temp_rows {
-        row.sort_by(|point_a, point_b| point_a.x.cmp(&point_b.x));
-        rows.insert(y, row);
     }
 
     PointMatrix { rows }
@@ -64,16 +58,19 @@ impl Chart {
     }
 
     pub fn draw_points(&self, points: Vec<&Point>) {
-        print!("{}", BLOCK_UPPER_HALF);
-        print!("{}", BLOCK_LOWER_HALF);
-        print!("{}", BLOCK_FULL);
+//        print!("{}", BLOCK_UPPER_HALF);
+//        print!("{}", BLOCK_LOWER_HALF);
+//        print!("{}", BLOCK_FULL);
 
         let matrix = sort_points(self, points);
 
-        for (_row_number, row) in matrix.rows {
-//            println!("{:?}",row);
-
-            self.draw_row(row);
+        for n in 0..self.height {
+            if let Some(row) = matrix.rows.get(&n) {
+                self.draw_row(row);
+                println!();
+            } else {
+                println!();
+            }
         }
 
 //        for point in points {
@@ -81,28 +78,17 @@ impl Chart {
 //        }
     }
 
-    fn draw_row(&self, row: PointRow) {
-        for n in 0..self.width {
-            for point in &row {
-                if point.x == n {
-                    println!("{}", n);
-                }
-            }
-        }
-    }
-    fn draw_pixel(&self, row: PointRow) {
-        for n in 0..self.width {
-            for point in &row {
-                if point.x == n {
-                    println!("{}", n);
-                }
-            }
-        }
-    }
-
     pub fn draw_point(&self, point: &Point) {
         self.draw_points(vec![point]);
     }
+
+    fn draw_row(&self, row: &PointRow) {
+        for n in 0..self.width {
+            if let Some(p) = row.get(&n) {
+                print!("{}", BLOCK_FULL);
+            } else {
+                print!(" ");
+            }
+        }
+    }
 }
-
-

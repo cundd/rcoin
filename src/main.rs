@@ -7,34 +7,64 @@ extern crate serde_json;
 mod rate;
 mod rate_provider;
 mod util;
+mod chart;
 
 //use rate::Rate;
 use std::{thread, time};
 
-fn get_and_print_rates() -> Result<(), ()> {
+fn get_and_print_rates(last_rate_option: Result<rate::Rate, ()>) -> Result<rate::Rate, ()> {
     let result = rate_provider::get();
-    if let Some(rates) = result {
+    if let Some(rate) = result {
+        let trend = get_trend(&rate, last_rate_option);
+
         println!("------------------------------------------------");
         print!("{}[2J", 27 as char); // Clear the screen
 
-        for rate in rates {
-            println!(
-                "{} Price USD: {} /  Price EUR: {}",
-                util::str_pad(&rate.symbol, 5, ' '),
-                util::str_pad(&rate.price_usd.to_string(), 10, ' '),
-                util::str_pad(&rate.price_eur.to_string(), 10, ' ')
-            );
-        }
+        println!(
+            "{} {} Price USD: {} /  Price EUR: {}",
+            trend,
+            util::str_pad(&rate.symbol, 5, ' '),
+            util::str_pad(&rate.price_usd.to_string(), 10, ' '),
+            util::str_pad(&rate.price_eur.to_string(), 10, ' ')
+        );
 
-        Ok(())
+        Ok(rate)
     } else {
         Err(())
     }
 }
 
+fn get_trend(current_rate: &rate::Rate, last_rate_option: Result<rate::Rate, ()>) -> String {
+    match last_rate_option {
+        Ok(last_rate) => {
+            if current_rate.price_usd < last_rate.price_usd {
+                "v".to_string()
+            } else if current_rate.price_usd > last_rate.price_usd {
+                "^".to_string()
+            } else {
+                "o".to_string()
+            }
+        }
+        Err(_) => "x".to_string(),
+    }
+}
+
 fn main() {
+    let chart = chart::Chart::new(100, 30);
+    let mut last_rate_option: Result<rate::Rate, ()> = Err(());
     loop {
-        if get_and_print_rates().is_err() { break; }
+        chart.draw_points(vec![
+            &chart::Point::new(0, 0),
+            &chart::Point::new(2, 2),
+            &chart::Point::new(1, 1),
+            &chart::Point::new(10, 20),
+            &chart::Point::new(10, 20),
+        ]);
+
+        break;
+
+        last_rate_option = get_and_print_rates(last_rate_option);
+        if last_rate_option.is_err() { break; }
 
         let interval = time::Duration::from_secs(1);
         thread::sleep(interval);
