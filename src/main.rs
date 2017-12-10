@@ -55,7 +55,7 @@ fn main() {
     loop {
         print!(
             "{}",
-            chart.draw_points_with_symbol(
+            chart.draw_points_with_symbols(
                 vec![
                     &chart::Point::new(0, 0),
                     &chart::Point::new(2, 2),
@@ -68,7 +68,8 @@ fn main() {
                     &chart::Point::new(100, 20),
                     &chart::Point::new(101, 20)
                 ],
-                "😊"
+                "😊",
+                "_"
             )
         );
 
