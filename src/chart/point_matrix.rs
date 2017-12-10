@@ -11,6 +11,10 @@ pub trait PointMatrixTrait {
     fn x_max(&self) -> Option<usize>;
     fn y_max(&self) -> Option<usize>;
     fn x_y_max(&self) -> Option<(usize, usize)>;
+
+    fn x_min(&self) -> Option<usize>;
+    fn y_min(&self) -> Option<usize>;
+    fn x_y_min(&self) -> Option<(usize, usize)>;
 }
 
 #[derive(Debug)]
@@ -108,6 +112,43 @@ impl<'a> PointMatrix<'a> {
 
         self.rows.iter().find(|&(_, row)| row.len() > 0).is_none()
     }
+
+    fn x_min(&self) -> Option<usize> {
+        if self.is_empty() {
+            return None;
+        }
+
+        let mut x_min: usize = usize::max_value();
+        for (_, row) in &self.rows {
+            if let Some(&current_x) = row.keys().nth(0) {
+                if x_min > current_x {
+                    x_min = current_x;
+                }
+            }
+        }
+
+        Some(x_min)
+    }
+
+    fn y_min(&self) -> Option<usize> {
+        if self.is_empty() {
+            return None;
+        }
+
+        if let Some(y) = self.rows.keys().nth(0) {
+            Some(*y)
+        } else {
+            None
+        }
+    }
+
+    fn x_y_min(&self) -> Option<(usize, usize)> {
+        if self.is_empty() {
+            return None;
+        }
+
+        Some((self.x_min().unwrap(), self.y_min().unwrap()))
+    }
 }
 
 impl<'a> PointMatrixTrait for PointMatrix<'a> {
@@ -135,6 +176,18 @@ impl<'a> PointMatrixTrait for PointMatrix<'a> {
     fn is_empty(&self) -> bool {
         PointMatrix::is_empty(self)
     }
+
+    fn x_min(&self) -> Option<usize> {
+        PointMatrix::x_min(self)
+    }
+
+    fn y_min(&self) -> Option<usize> {
+        PointMatrix::y_min(self)
+    }
+
+    fn x_y_min(&self) -> Option<(usize, usize)> {
+        PointMatrix::x_y_min(self)
+    }
 }
 
 impl<'a> PointMatrixTrait for &'a PointMatrix<'a> {
@@ -160,6 +213,18 @@ impl<'a> PointMatrixTrait for &'a PointMatrix<'a> {
 
     fn is_empty(&self) -> bool {
         PointMatrix::is_empty(self)
+    }
+
+    fn x_min(&self) -> Option<usize> {
+        PointMatrix::x_min(self)
+    }
+
+    fn y_min(&self) -> Option<usize> {
+        PointMatrix::y_min(self)
+    }
+
+    fn x_y_min(&self) -> Option<(usize, usize)> {
+        PointMatrix::x_y_min(self)
     }
 }
 
@@ -242,5 +307,26 @@ mod tests {
         let test_vec = build_test_vec();
         let matrix = PointMatrix::new_from_vec(test_vec.iter().collect());
         assert_eq!((101, 20), matrix.x_y_max().unwrap());
+    }
+
+    #[test]
+    fn x_min_test() {
+        let test_vec = build_min_test_vec();
+        let matrix = PointMatrix::new_from_vec(test_vec.iter().collect());
+        assert_eq!(8, matrix.x_min().unwrap());
+    }
+
+    #[test]
+    fn y_min_test() {
+        let test_vec = build_min_test_vec();
+        let matrix = PointMatrix::new_from_vec(test_vec.iter().collect());
+        assert_eq!(4, matrix.y_min().unwrap());
+    }
+
+    #[test]
+    fn x_y_min_test() {
+        let test_vec = build_min_test_vec();
+        let matrix = PointMatrix::new_from_vec(test_vec.iter().collect());
+        assert_eq!((8, 4), matrix.x_y_min().unwrap());
     }
 }
