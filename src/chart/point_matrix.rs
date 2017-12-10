@@ -19,16 +19,14 @@ pub trait PointMatrixTrait {
 
 #[derive(Debug, Clone)]
 pub struct PointMatrix {
+    len: usize,
     rows: BTreeMap<usize, PointRow>,
 }
 
 impl PointMatrix {
-    pub fn new(rows: BTreeMap<usize, PointRow>) -> Self {
-        PointMatrix { rows }
-    }
-
     pub fn new_from_vec(points: Vec<Point>) -> Self {
         let mut rows: BTreeMap<usize, PointRow> = BTreeMap::new();
+        let len = points.len();
 
         for point in points {
             let mut handled = false;
@@ -47,7 +45,23 @@ impl PointMatrix {
             }
         }
 
-        PointMatrix::new(rows)
+        PointMatrix { len, rows }
+    }
+
+    fn new(len: usize, rows: BTreeMap<usize, PointRow>) -> Self {
+        PointMatrix { len, rows }
+    }
+
+    pub fn map<F>(&self, callback: F) -> PointMatrix
+        where F: Fn(Point) -> Point {
+        let mut temp_vec: Vec<Point> = Vec::with_capacity(self.len);
+        for (_, row) in &self.rows {
+            for (column, &point) in row {
+                temp_vec.push(callback(point));
+            }
+        }
+
+        PointMatrix::new_from_vec(temp_vec)
     }
 
     fn get(&self, row: usize, column: usize) -> Option<Point> {
@@ -106,11 +120,7 @@ impl PointMatrix {
     }
 
     fn is_empty(&self) -> bool {
-        if self.rows.len() == 0 {
-            return true;
-        }
-
-        self.rows.iter().find(|&(_, row)| row.len() > 0).is_none()
+        return self.len == 0;
     }
 
     fn x_min(&self) -> Option<usize> {
@@ -274,7 +284,7 @@ mod tests {
             assert_eq!(false, matrix.is_empty());
         }
         {
-            assert!(PointMatrix::new(BTreeMap::new()).is_empty());
+            assert!(PointMatrix::new(0, BTreeMap::new()).is_empty());
         }
         {
             let mut rows = BTreeMap::new();
@@ -282,7 +292,7 @@ mod tests {
             rows.insert(1, PointRow::new());
             rows.insert(2, PointRow::new());
             rows.insert(3, PointRow::new());
-            assert!(PointMatrix::new(rows).is_empty());
+            assert!(PointMatrix::new(0, rows).is_empty());
         }
     }
 
@@ -320,5 +330,15 @@ mod tests {
     fn x_y_min_test() {
         let matrix = PointMatrix::new_from_vec(build_min_test_vec());
         assert_eq!((8, 4), matrix.x_y_min().unwrap());
+    }
+
+    #[test]
+    fn map_test() {
+        let matrix = PointMatrix::new_from_vec(vec![
+            Point::new(0, 10),
+            Point::new(10, 20),
+        ]).map(|p| { Point::new(p.x + 5, p.y + 7) });
+        assert!(matrix.get(17, 5).is_some());
+        assert!(matrix.get(27, 15).is_some());
     }
 }
