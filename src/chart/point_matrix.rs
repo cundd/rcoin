@@ -64,7 +64,7 @@ impl PointMatrix {
         PointMatrix::new_from_vec(temp_vec)
     }
 
-    fn get(&self, row: usize, column: usize) -> Option<Point> {
+    pub fn get(&self, row: usize, column: usize) -> Option<Point> {
         if let Some(point_row) = self.rows.get(&row) {
             match point_row.get(&column) {
                 Some(point) => Some(Point { x: point.x, y: point.y }),
@@ -75,7 +75,7 @@ impl PointMatrix {
         }
     }
 
-    fn has(&self, row: usize, column: usize) -> bool {
+    pub fn has(&self, row: usize, column: usize) -> bool {
         if let Some(point_row) = self.rows.get(&row) {
             match point_row.get(&column) {
                 Some(_) => true,
@@ -86,7 +86,7 @@ impl PointMatrix {
         }
     }
 
-    fn x_max(&self) -> Option<usize> {
+    pub fn x_max(&self) -> Option<usize> {
         if self.is_empty() {
             return None;
         }
@@ -103,7 +103,7 @@ impl PointMatrix {
         Some(x_max)
     }
 
-    fn y_max(&self) -> Option<usize> {
+    pub fn y_max(&self) -> Option<usize> {
         if let Some(y) = self.rows.keys().rev().nth(0) {
             Some(*y)
         } else {
@@ -111,7 +111,7 @@ impl PointMatrix {
         }
     }
 
-    fn x_y_max(&self) -> Option<(usize, usize)> {
+    pub fn x_y_max(&self) -> Option<(usize, usize)> {
         if self.is_empty() {
             return None;
         }
@@ -119,11 +119,11 @@ impl PointMatrix {
         Some((self.x_max().unwrap(), self.y_max().unwrap()))
     }
 
-    fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         return self.len == 0;
     }
 
-    fn x_min(&self) -> Option<usize> {
+    pub fn x_min(&self) -> Option<usize> {
         if self.is_empty() {
             return None;
         }
@@ -140,7 +140,7 @@ impl PointMatrix {
         Some(x_min)
     }
 
-    fn y_min(&self) -> Option<usize> {
+    pub fn y_min(&self) -> Option<usize> {
         if self.is_empty() {
             return None;
         }
@@ -152,7 +152,7 @@ impl PointMatrix {
         }
     }
 
-    fn x_y_min(&self) -> Option<(usize, usize)> {
+    pub fn x_y_min(&self) -> Option<(usize, usize)> {
         if self.is_empty() {
             return None;
         }

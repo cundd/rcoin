@@ -1,16 +1,16 @@
 pub use super::point::Point;
-use super::point_matrix::PointMatrixTrait;
 use super::point_matrix::PointMatrix;
 
 pub struct Canvas {
     width: usize,
     height: usize,
+    x_start: usize,
+    y_start: usize,
 }
 
-
 impl Canvas {
-    pub fn new(width: usize, height: usize) -> Self {
-        Canvas { width, height }
+    pub fn new(width: usize, height: usize, x_start: usize, y_start: usize) -> Self {
+        Canvas { width, height, x_start, y_start }
     }
 
     pub fn draw_points(&self, matrix: PointMatrix) -> String {
@@ -42,13 +42,17 @@ impl Canvas {
 
     pub fn draw_points_with_callback<F>(&self, matrix: PointMatrix, draw_callback: F) -> String
         where F: Fn(Option<Point>) -> String {
+        if matrix.is_empty() {
+            return "".to_string();
+        }
         let mut buffer = String::with_capacity(self.width * self.height);
 
-        for n in 0..self.height {
+        let y_start = self.y_start;
+
+        for n in (y_start..y_start + self.height).rev() {
             buffer.push_str(&self.draw_row(n, &matrix, &draw_callback));
             buffer.push_str("\n");
         }
-
         buffer
     }
 
@@ -56,7 +60,9 @@ impl Canvas {
         where F: Fn(Option<Point>) -> String {
         let mut buffer = String::with_capacity(self.width);
 
-        for column in 0..self.width {
+        let x_start = self.x_start;
+
+        for column in x_start..self.width + x_start {
             buffer.push_str(&draw_callback(matrix.get(row, column)));
         }
 
@@ -70,10 +76,10 @@ mod tests {
 
     #[test]
     fn draw_points_with_symbol_test() {
-        let canvas = Canvas::new(10, 2);
+        let canvas = Canvas::new(10, 2, 0, 0);
 
         assert_eq!(
-            ".         \n .        \n",
+            " .        \n.         \n",
             canvas.draw_points_with_symbol(
                 PointMatrix::new_from_vec(vec![
                     Point::new(0, 0),
@@ -92,7 +98,7 @@ mod tests {
         );
 
         assert_eq!(
-            "😊         \n 😊        \n",
+            " 😊        \n😊         \n",
             canvas.draw_points_with_symbol(
                 PointMatrix::new_from_vec(vec![
                     Point::new(0, 0),
@@ -111,7 +117,7 @@ mod tests {
         );
 
         assert_eq!(
-            "😊         \n 😊       😊\n",
+            " 😊       😊\n😊         \n",
             canvas.draw_points_with_symbol(
                 PointMatrix::new_from_vec(vec![
                     Point::new(0, 0),
@@ -133,10 +139,10 @@ mod tests {
 
     #[test]
     fn draw_points_with_symbols_test() {
-        let canvas = Canvas::new(10, 2);
+        let canvas = Canvas::new(10, 2, 0, 0);
 
         assert_eq!(
-            ".         \n .        \n",
+            " .        \n.         \n",
             canvas.draw_points_with_symbols(
                 PointMatrix::new_from_vec(vec![
                     Point::new(0, 0),
@@ -156,7 +162,7 @@ mod tests {
         );
 
         assert_eq!(
-            "😊         \n 😊        \n",
+            " 😊        \n😊         \n",
             canvas.draw_points_with_symbols(
                 PointMatrix::new_from_vec(vec![
                     Point::new(0, 0),
@@ -176,7 +182,7 @@ mod tests {
         );
 
         assert_eq!(
-            "😊_________\n_😊_______😊\n",
+            "_😊_______😊\n😊_________\n",
             canvas.draw_points_with_symbols(
                 PointMatrix::new_from_vec(vec![
                     Point::new(0, 0),
@@ -199,10 +205,10 @@ mod tests {
 
     #[test]
     fn draw_points_with_callback_test() {
-        let canvas = Canvas::new(10, 2);
+        let canvas = Canvas::new(10, 2, 0, 0);
 
         assert_eq!(
-            "x_________\n_x________\n",
+            "_x________\nx_________\n",
             canvas.draw_points_with_callback(
                 PointMatrix::new_from_vec(vec![
                     Point::new(0, 0),
