@@ -5,19 +5,23 @@ use self::curl::easy::Easy;
 
 mod coin_market_cap;
 mod coin_desk;
+mod blockchain_info;
+mod provider_error;
 
 use rate;
+use self::provider_error::ProviderError;
+
 
 trait RateProvider {
-    fn get() -> Option<rate::Rate>;
-    fn get_all() -> Option<Vec<rate::Rate>> {
-        if let Some(single) = Self::get() {
-            return Some(vec![single]);
+    fn get() -> Result<rate::Rate, ProviderError>;
+    fn get_all() -> Result<Vec<rate::Rate>, ProviderError> {
+        match Self::get() {
+            Ok(single) => Ok(vec![single]),
+            Err(e) => Err(e)
         }
-        None
     }
 
-    fn download<'a>(url: &'a str) -> String {
+    fn download<'a>(url: &'a str) -> Result<String, ProviderError> {
         let mut handle = Easy::new();
         let mut data = Vec::new();
         let mut output = String::new();
@@ -29,28 +33,52 @@ trait RateProvider {
                 data.extend_from_slice(new_data);
                 Ok(new_data.len())
             }).unwrap();
-            transfer.perform().unwrap();
+
+            if let Err(e) = transfer.perform() {
+                return Err(ProviderError::new(e.to_string()));
+            }
         }
-        output
+        Ok(output)
     }
 
-    fn convert(response: &str) -> Option<rate::Rate>;
+    fn convert(response: &str) -> Result<rate::Rate, ProviderError>;
 
-    fn convert_all(response: &str) -> Option<Vec<rate::Rate>> {
+    fn convert_all(response: &str) -> Result<Vec<rate::Rate>, ProviderError> {
         let deserialized_result: serde_json::Result<Vec<rate::Rate>> = serde_json::from_str(&response);
 
         match deserialized_result {
-            Ok(deserialized) => Some(deserialized),
+            Ok(deserialized) => Ok(deserialized),
             Err(e) => {
-                print!("{:?}", e);
-                None
+                Err(ProviderError::new(e.to_string()))
             }
         }
     }
 }
 
 
-pub fn get() -> Option<rate::Rate> {
-    //    coin_market_cap::CoinMarketCap::get()
-    coin_desk::CoinDesk::get()
+//pub fn get_provider(id: &str) -> Box<&RateProvider> {
+//    match id {
+//        "CoinDesk"
+//        | "coindesk"
+//        | "coin_desk" => Box::new(coin_desk::CoinDesk::new()),
+//        "CoinMarketCap"
+//        | "coinmarketcap"
+//        | "coin_market_cap" => Box::new(coin_market_cap::CoinMarketCap::new()),
+//    }
+//}
+
+#[allow(unused)]
+pub fn get(provider_type: &str) -> Result<rate::Rate, ProviderError> {
+    match provider_type {
+        "CoinDesk"
+        | "coindesk"
+        | "coin_desk" => coin_desk::CoinDesk::get(),
+        "CoinMarketCap"
+        | "coinmarketcap"
+        | "coin_market_cap" => coin_market_cap::CoinMarketCap::get(),
+        "BlockchainInfo"
+        | "blockchaininfo"
+        | "blockchain_info" => blockchain_info::BlockchainInfo::get(),
+        &_ => Err(ProviderError::new(format!("No provider for type '{}' found", provider_type)))
+    }
 }
