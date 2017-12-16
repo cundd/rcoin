@@ -48,6 +48,7 @@ impl PointMatrix {
         PointMatrix { len, rows }
     }
 
+    #[allow(unused)]
     fn new(len: usize, rows: BTreeMap<usize, PointRow>) -> Self {
         PointMatrix { len, rows }
     }
@@ -56,7 +57,7 @@ impl PointMatrix {
         where F: Fn(Point) -> Point {
         let mut temp_vec: Vec<Point> = Vec::with_capacity(self.len);
         for (_, row) in &self.rows {
-            for (column, &point) in row {
+            for (_, &point) in row {
                 temp_vec.push(callback(point));
             }
         }

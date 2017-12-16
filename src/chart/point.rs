@@ -9,6 +9,7 @@ impl Point {
         Point { x, y }
     }
 
+    #[allow(unused)]
     pub fn null() -> Self {
         Point {
             x: 0,

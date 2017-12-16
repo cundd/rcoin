@@ -1,6 +1,7 @@
+pub mod color;
+pub mod mode;
+pub mod point;
 mod canvas;
-mod mode;
-mod point;
 mod point_matrix;
 mod transform;
 
@@ -9,12 +10,12 @@ pub use self::mode::Mode;
 use self::canvas::Canvas;
 use self::point_matrix::PointMatrix;
 
-#[allow(dead_code)]
-const BLOCK_FULL: &'static str = "\u{2588}";
-#[allow(dead_code)]
-const BLOCK_UPPER_HALF: &'static str = "\u{2580}";
-#[allow(dead_code)]
-const BLOCK_LOWER_HALF: &'static str = "\u{2584}";
+#[allow(unused)]
+pub const BLOCK_FULL: &'static str = "\u{2588}";
+#[allow(unused)]
+pub const BLOCK_UPPER_HALF: &'static str = "\u{2580}";
+#[allow(unused)]
+pub const BLOCK_LOWER_HALF: &'static str = "\u{2584}";
 
 pub struct Chart {
     mode: Mode,
@@ -24,11 +25,15 @@ pub struct Chart {
 
 impl Chart {
     pub fn new(width: usize, height: usize, mode: Mode) -> Self {
-        let canvas = Canvas::new(width, height, 0, 0);
         Chart { width, height, mode }
     }
 
-    #[allow(dead_code)]
+    pub fn width(&self) -> usize { self.width }
+
+    #[allow(unused)]
+    pub fn height(&self) -> usize { self.height }
+
+    #[allow(unused)]
     pub fn draw_points(&self, points: Vec<Point>) -> String {
         let matrix = PointMatrix::new_from_vec(points);
         if let Some(canvas) = self.get_canvas(&matrix) {
@@ -46,7 +51,7 @@ impl Chart {
         }
     }
 
-    #[allow(dead_code)]
+    #[allow(unused)]
     pub fn draw_points_with_symbol(&self, points: Vec<Point>, symbol: &str) -> String {
         let matrix = PointMatrix::new_from_vec(points);
         if let Some(canvas) = self.get_canvas(&matrix) {
@@ -64,7 +69,7 @@ impl Chart {
         }
     }
 
-    #[allow(dead_code)]
+    #[allow(unused)]
     pub fn draw_points_with_symbols(&self, points: Vec<Point>, point_symbol: &str, placeholder: &str) -> String {
         let matrix = PointMatrix::new_from_vec(points);
         if let Some(canvas) = self.get_canvas(&matrix) {
@@ -82,7 +87,7 @@ impl Chart {
         }
     }
 
-    #[allow(dead_code)]
+    #[allow(unused)]
     pub fn draw_points_with_callback<F>(&self, points: Vec<Point>, draw_callback: F) -> String
         where F: Fn(Option<Point>) -> String {
         let matrix = PointMatrix::new_from_vec(points);

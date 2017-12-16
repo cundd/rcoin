@@ -22,12 +22,6 @@ impl Mode {
             _ => Err(()),
         }
     }
-    pub fn from_option_str(mode: Option<String>) -> Result<Self, ()> {
-        match mode {
-            Some(mode) => Mode::from_str(&mode),
-            None => Err(()),
-        }
-    }
 }
 
 #[cfg(test)]
