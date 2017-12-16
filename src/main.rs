@@ -2,83 +2,152 @@
 extern crate serde_derive;
 extern crate serde;
 extern crate serde_json;
-//extern crate curl;
+extern crate clap;
+extern crate term_size;
+extern crate chrono;
 
 mod rate;
 mod rate_provider;
 mod util;
 mod chart;
+mod rate_printer;
 
 use std::{thread, time};
-use chart::Point;
+use clap::{App, Arg, ArgMatches};
 
-fn get_and_print_rates(last_rate_option: Result<rate::Rate, ()>) -> Result<rate::Rate, ()> {
-    let result = rate_provider::get();
-    if let Some(rate) = result {
-        let trend = get_trend(&rate, last_rate_option);
-
-        println!("------------------------------------------------");
-        print!("{}[2J", 27 as char); // Clear the screen
-
-        println!(
-            "{} {} Price USD: {} /  Price EUR: {}",
-            trend,
-            util::str_pad(&rate.symbol, 5, ' '),
-            util::str_pad(&rate.price_usd.to_string(), 10, ' '),
-            util::str_pad(&rate.price_eur.to_string(), 10, ' ')
-        );
-
-        Ok(rate)
-    } else {
-        Err(())
+fn get_mode(matches: &ArgMatches) -> chart::Mode {
+    match matches.value_of("mode") {
+        Some(mode_arg) => {
+            match chart::Mode::from_str(&mode_arg) {
+                Ok(mode) => mode,
+                Err(_) => panic!("Invalid mode '{}'", mode_arg),
+            }
+        }
+        None => chart::Mode::ScaleDown,
     }
 }
 
-fn get_trend(current_rate: &rate::Rate, last_rate_option: Result<rate::Rate, ()>) -> String {
-    match last_rate_option {
-        Ok(last_rate) => {
-            if current_rate.price_usd < last_rate.price_usd {
-                "v".to_string()
-            } else if current_rate.price_usd > last_rate.price_usd {
-                "^".to_string()
-            } else {
-                "o".to_string()
+fn get_chart_width(matches: &ArgMatches) -> usize {
+    let default = match term_size::dimensions() {
+        Some((default, _)) => default,
+        None => 200,
+    };
+    match matches.value_of("width") {
+        Some(arg) => {
+            arg.parse().unwrap_or(default)
+        }
+        None => default,
+    }
+}
+
+fn get_chart_height(matches: &ArgMatches) -> usize {
+    let default = match term_size::dimensions() {
+        Some((_, default)) => default,
+        None => 30,
+    };
+    match matches.value_of("height") {
+        Some(arg) => {
+            arg.parse().unwrap_or(default)
+        }
+        None => default,
+    }
+}
+
+fn get_interval(matches: &ArgMatches) -> u64 {
+    let default: u64 = 2;
+    match matches.value_of("interval") {
+        Some(arg) => {
+            let interval_int = arg.parse::<u64>();
+            if let Ok(interval_int) = interval_int {
+                return 1000 * interval_int;
+            };
+            match arg.parse::<f64>() {
+                Ok(interval_float) => {
+                    (1000.0 * interval_float) as u64
+                }
+                Err(_) => default,
             }
         }
-        Err(_) => "x".to_string(),
+        None => default,
+    }
+}
+
+
+fn get_chart_fill(matches: &ArgMatches) -> String {
+    match matches.value_of("fill") {
+        Some(fill) => fill.to_string(),
+        None => chart::BLOCK_FULL.to_string(),
+    }
+}
+
+fn get_chart_space(matches: &ArgMatches) -> String {
+    match matches.value_of("space") {
+        Some(space) => space.to_string(),
+        None => " ".to_string(),
+    }
+}
+
+fn get_provider_type(matches: &ArgMatches) -> String {
+    match matches.value_of("provider_type") {
+        Some(provider_type) => provider_type.to_string(),
+        None => "CoinDesk".to_string(),
     }
 }
 
 fn main() {
-    let chart = chart::Chart::new(30, 30, chart::Mode::ScaleDownX);
-    let mut last_rate_option: Result<rate::Rate, ()> = Err(());
+    let matches = App::new("rcoin")
+        .version("1.0")
+        .author("Daniel Corn <info@cundd.net>")
+        .about("Watch Bitcoin prices")
+        .arg(Arg::with_name("mode")
+            .long("mode")
+            .short("m")
+            .help("Sets the chart's display mode")
+            .takes_value(true))
+        .arg(Arg::with_name("width")
+            .long("width")
+            .short("w")
+            .help("Sets the chart's width")
+            .takes_value(true))
+        .arg(Arg::with_name("height")
+            .long("height")
+            .short("h")
+            .help("Sets the chart's height")
+            .takes_value(true))
+        .arg(Arg::with_name("fill")
+            .long("fill")
+            .short("f")
+            .help("Sets the chart's fill character")
+            .takes_value(true))
+        .arg(Arg::with_name("space")
+            .long("space")
+            .short("s")
+            .help("Sets the chart's space character")
+            .takes_value(true))
+        .arg(Arg::with_name("interval")
+            .short("i")
+            .long("interval")
+            .help("Sets the interval between requests (in seconds)")
+            .takes_value(true))
+        .arg(Arg::with_name("provider_type")
+            .long("provider-type")
+            .help("Fetch rates from the given provider")
+            .takes_value(true))
+        .get_matches();
+
+    let interval_seconds = get_interval(&matches);
+    let fill = get_chart_fill(&matches);
+    let space = get_chart_space(&matches);
+    let provider_type = get_provider_type(&matches);
+    let chart = chart::Chart::new(get_chart_width(&matches), get_chart_height(&matches), get_mode(&matches));
+
+    let mut printer = rate_printer::RatePrinter::new(chart, &provider_type, &fill, &space);
     loop {
-        print!(
-            "{}",
-            chart.draw_points_with_symbols(
-                vec![
-                    chart::Point::new(0, 0),
-                    chart::Point::new(2, 2),
-                    chart::Point::new(1, 1),
-                    chart::Point::new(10, 20),
-                    chart::Point::new(12, 20),
-                    chart::Point::new(14, 20),
-                    chart::Point::new(11, 20),
-                    chart::Point::new(99, 20),
-                    chart::Point::new(100, 20),
-                    chart::Point::new(101, 20)
-                ],
-                "😊",
-                "_"
-            )
-        );
+        if printer.get_and_print_rates().is_err() {
+            break;
+        }
 
-        break;
-
-        last_rate_option = get_and_print_rates(last_rate_option);
-        if last_rate_option.is_err() { break; }
-
-        let interval = time::Duration::from_secs(1);
+        let interval = time::Duration::from_millis(interval_seconds);
         thread::sleep(interval);
     }
 }
