@@ -3,14 +3,14 @@ use super::Rate;
 #[derive(Clone)]
 pub struct RateSeries {
     max_len: usize,
-    data: Vec<Rate>
+    data: Vec<Rate>,
 }
 
 impl RateSeries {
     pub fn new(max_len: usize) -> Self {
         RateSeries {
             max_len,
-            data: Vec::with_capacity(max_len)
+            data: Vec::with_capacity(max_len),
         }
     }
     pub fn push(&mut self, rate: Rate) {
@@ -32,6 +32,8 @@ impl RateSeries {
     pub fn last(&self) -> Option<&Rate> {
         self.data.last()
     }
+
+    #[allow(unused)]
     pub fn last_mut(&mut self) -> Option<&mut Rate> { self.data.last_mut() }
 }
 
@@ -39,16 +41,17 @@ impl RateSeries {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use super::super::Currency;
 
     #[test]
     fn push_test() {
         let mut rs = RateSeries::new(2);
-        rs.push(Rate::new(0.01, 0.02));
-        rs.push(Rate::new(0.11, 0.12));
+        rs.push(Rate::new(Currency::Bitcoin, 0.01, 0.02));
+        rs.push(Rate::new(Currency::Bitcoin, 0.11, 0.12));
 
         assert_eq!(2, rs.len());
 
-        rs.push(Rate::new(0.21, 0.22));
+        rs.push(Rate::new(Currency::Bitcoin, 0.21, 0.22));
         assert_eq!(2, rs.len());
     }
 }

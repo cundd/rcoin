@@ -1,10 +1,13 @@
 pub mod color;
 pub mod mode;
 pub mod point;
+pub mod point_drawing;
+pub mod configuration;
 mod canvas;
 mod point_matrix;
 mod transform;
 
+use term_size;
 pub use self::point::Point;
 pub use self::mode::Mode;
 use self::canvas::Canvas;
@@ -19,19 +22,39 @@ pub const BLOCK_LOWER_HALF: &'static str = "\u{2584}";
 
 pub struct Chart {
     mode: Mode,
-    width: usize,
-    height: usize,
+    _width: usize,
+    _height: usize,
+    pub y_scala_width: usize,
+    pub x_scala_width: usize,
 }
 
 impl Chart {
-    pub fn new(width: usize, height: usize, mode: Mode) -> Self {
-        Chart { width, height, mode }
+    pub fn new(width: usize, height: usize, x_scala_width: usize, y_scala_width: usize, mode: Mode) -> Self {
+        Chart { _width: width, _height: height, mode, x_scala_width, y_scala_width }
     }
 
-    pub fn width(&self) -> usize { self.width }
+    pub fn width(&self) -> usize {
+        if self._width > 0 {
+            self._width
+        } else {
+            match term_size::dimensions() {
+                Some((default, _)) => default,
+                None => 30,
+            }
+        }
+    }
 
     #[allow(unused)]
-    pub fn height(&self) -> usize { self.height }
+    pub fn height(&self) -> usize {
+        if self._height > 0 {
+            self._height
+        } else {
+            match term_size::dimensions() {
+                Some((_, default)) => default,
+                None => 10,
+            }
+        }
+    }
 
     #[allow(unused)]
     pub fn draw_points(&self, points: Vec<Point>) -> String {
@@ -45,6 +68,24 @@ impl Chart {
                 Mode::ScaleDownX => canvas.draw_points(transform::scale_down_x(self, &matrix)),
                 Mode::ScaleDownY => canvas.draw_points(transform::scale_down_y(self, &matrix)),
                 Mode::ScaleDown => canvas.draw_points(transform::scale_down(self, &matrix)),
+            }
+        } else {
+            "".to_string()
+        }
+    }
+
+    #[allow(unused)]
+    pub fn draw_points_with_configuration(&self, points: Vec<Point>, conf: &self::configuration::Configuration) -> String {
+        let matrix = PointMatrix::new_from_vec(points);
+        if let Some(canvas) = self.get_canvas(&matrix) {
+            match self.mode {
+                Mode::Truncate => canvas.draw_points_with_configuration(matrix, conf),
+                Mode::ScaleX => canvas.draw_points_with_configuration(transform::scale_x(self, &matrix), conf),
+                Mode::ScaleY => canvas.draw_points_with_configuration(transform::scale_y(self, &matrix), conf),
+                Mode::Scale => canvas.draw_points_with_configuration(transform::scale(self, &matrix), conf),
+                Mode::ScaleDownX => canvas.draw_points_with_configuration(transform::scale_down_x(self, &matrix), conf),
+                Mode::ScaleDownY => canvas.draw_points_with_configuration(transform::scale_down_y(self, &matrix), conf),
+                Mode::ScaleDown => canvas.draw_points_with_configuration(transform::scale_down(self, &matrix), conf),
             }
         } else {
             "".to_string()
@@ -112,7 +153,7 @@ impl Chart {
         if x_start.is_none() || y_start.is_none() {
             return None;
         }
-        Some(Canvas::new(self.width, self.height, x_start.unwrap(), y_start.unwrap()))
+        Some(Canvas::new(self.width() - self.y_scala_width, self.height() - self.x_scala_width, x_start.unwrap(), y_start.unwrap()))
     }
 }
 
@@ -122,7 +163,7 @@ mod tests {
 
     #[test]
     fn draw_points_with_symbol_test() {
-        let canvas = Chart::new(10, 2, Mode::Truncate);
+        let canvas = Chart::new(10, 2, 0, 0, Mode::Truncate);
 
         assert_eq!(
             " .        \n.         \n",
@@ -139,7 +180,7 @@ mod tests {
                     Point::new(100, 20),   // Will be clipped
                     Point::new(101, 20)    // Will be clipped
                 ],
-                "."
+                ".",
             )
         );
 
@@ -158,7 +199,7 @@ mod tests {
                     Point::new(100, 20),   // Will be clipped
                     Point::new(101, 20)    // Will be clipped
                 ],
-                "😊"
+                "😊",
             )
         );
 
@@ -178,14 +219,14 @@ mod tests {
                     Point::new(100, 20),   // Will be clipped
                     Point::new(101, 20)    // Will be clipped
                 ],
-                "😊"
+                "😊",
             )
         );
     }
 
     #[test]
     fn draw_points_with_symbols_test() {
-        let canvas = Chart::new(10, 2, Mode::Truncate);
+        let canvas = Chart::new(10, 2, 0, 0, Mode::Truncate);
 
         assert_eq!(
             " .        \n.         \n",
@@ -203,7 +244,7 @@ mod tests {
                     Point::new(101, 20)    // Will be clipped
                 ],
                 ".",
-                " "
+                " ",
             )
         );
 
@@ -223,7 +264,7 @@ mod tests {
                     Point::new(101, 20)    // Will be clipped
                 ],
                 "😊",
-                " "
+                " ",
             )
         );
 
@@ -244,14 +285,14 @@ mod tests {
                     Point::new(101, 20)    // Will be clipped
                 ],
                 "😊",
-                "_"
+                "_",
             )
         );
     }
 
     #[test]
     fn draw_points_with_callback_test() {
-        let canvas = Chart::new(10, 2, Mode::Truncate);
+        let canvas = Chart::new(10, 2, 0, 0, Mode::Truncate);
 
         assert_eq!(
             "_x________\nx_________\n",
@@ -273,7 +314,7 @@ mod tests {
                         Some(_) => "x".to_string(),
                         None => "_".to_string(),
                     }
-                }
+                },
             )
         );
 

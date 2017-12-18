@@ -18,7 +18,7 @@ fn get_factor_x(chart: &Chart, matrix: &PointMatrix, max: Option<f32>) -> f32 {
     if matrix.is_empty() {
         return 1.0;
     }
-    let result = chart.width as f32 / (matrix.x_max().unwrap() as f32 - matrix.x_min().unwrap() as f32);
+    let result = (chart.width() - chart.x_scala_width) as f32 / (matrix.x_max().unwrap() as f32 - matrix.x_min().unwrap() as f32);
 
     match max {
         None => result,
@@ -34,7 +34,7 @@ fn get_factor_y(chart: &Chart, matrix: &PointMatrix, max: Option<f32>) -> f32 {
     if matrix.is_empty() {
         return 1.0;
     }
-    let result = chart.height as f32 / (matrix.y_max().unwrap() as f32 - matrix.y_min().unwrap() as f32);
+    let result = (chart.height() - chart.y_scala_width) as f32 / (matrix.y_max().unwrap() as f32 - matrix.y_min().unwrap() as f32);
 
     match max {
         None => result,

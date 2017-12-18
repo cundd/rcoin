@@ -7,8 +7,9 @@ pub struct ProviderError {
 }
 
 impl ProviderError {
-    pub fn new(message: String) -> Self {
-        ProviderError { message }
+    pub fn new<S>(message: S) -> Self
+        where S: Into<String> {
+        ProviderError { message: message.into() }
     }
 }
 

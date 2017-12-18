@@ -1,60 +1,59 @@
 use std::collections::BTreeMap;
-use super::Point;
 
-type PointRow = BTreeMap<usize, Point>;
+type Row<I> = BTreeMap<usize, I>;
 
 #[derive(Debug, Clone)]
-pub struct PointMatrix {
+pub struct Matrix<I: Clone> {
     len: usize,
-    rows: BTreeMap<usize, PointRow>,
+    rows: BTreeMap<usize, Row<I>>,
 }
 
-impl PointMatrix {
-    pub fn new_from_vec(points: Vec<Point>) -> Self {
-        let mut rows: BTreeMap<usize, PointRow> = BTreeMap::new();
-        let len = points.len();
-
-        for point in points {
-            let mut handled = false;
-
-            {
-                let row_option = rows.get_mut(&point.y);
-                if let Some(row) = row_option {
-                    row.insert(point.x, point);
-                    handled = true;
-                }
-            }
-            if !handled {
-                let mut row = PointRow::new();
-                row.insert(point.x, point);
-                rows.insert(point.y, row);
-            }
-        }
-
-        PointMatrix { len, rows }
-    }
+impl<I: Clone> Matrix<I> {
+//    pub fn new_from_vec(points: Vec<I>) -> Self {
+//        let mut rows: BTreeMap<usize, Row<I>> = BTreeMap::new();
+//        let len = points.len();
+//
+//        for point in points {
+//            let mut handled = false;
+//
+//            {
+//                let row_option = rows.get_mut(&point.y);
+//                if let Some(row) = row_option {
+//                    row.insert(point.x, point);
+//                    handled = true;
+//                }
+//            }
+//            if !handled {
+//                let mut row = Row::new();
+//                row.insert(point.x, point);
+//                rows.insert(point.y, row);
+//            }
+//        }
+//
+//        Matrix { len, rows }
+//    }
 
     #[allow(unused)]
-    fn new(len: usize, rows: BTreeMap<usize, PointRow>) -> Self {
-        PointMatrix { len, rows }
+    fn new(len: usize, rows: BTreeMap<usize, Row<I>>) -> Self {
+        Matrix { len, rows }
     }
 
-    pub fn map<F>(&self, callback: F) -> PointMatrix
-        where F: Fn(Point) -> Point {
-        let mut temp_vec: Vec<Point> = Vec::with_capacity(self.len);
+    pub fn map<F>(&self, callback: F) -> Self
+        where F: Fn(I) -> I {
+        let mut temp_vec: Vec<I> = Vec::with_capacity(self.len);
         for (_, row) in &self.rows {
             for (_, &point) in row {
                 temp_vec.push(callback(point));
             }
         }
 
-        PointMatrix::new_from_vec(temp_vec)
+        Matrix::new_from_vec(temp_vec)
     }
 
-    pub fn get(&self, row: usize, column: usize) -> Option<Point> {
-        if let Some(point_row) = self.rows.get(&row) {
-            match point_row.get(&column) {
-                Some(point) => Some(Point { x: point.x, y: point.y }),
+    pub fn get(&self, row: usize, column: usize) -> Option<I> {
+        if let Some(row) = self.rows.get(&row) {
+            match row.get(&column) {
+                Some(point) => Some(point.clone()),
                 None => None,
             }
         } else {
@@ -99,7 +98,6 @@ impl PointMatrix {
         }
     }
 
-    #[allow(unused)]
     pub fn x_y_max(&self) -> Option<(usize, usize)> {
         if self.is_empty() {
             return None;
@@ -141,7 +139,6 @@ impl PointMatrix {
         }
     }
 
-    #[allow(unused)]
     pub fn x_y_min(&self) -> Option<(usize, usize)> {
         if self.is_empty() {
             return None;
@@ -154,6 +151,21 @@ impl PointMatrix {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[derive(Debug, Clone)]
+    struct Point {
+        x: usize,
+        y: usize,
+    }
+
+    impl Point {
+        fn new(x: usize, y: usize) -> Self {
+            Point {
+                x,
+                y,
+            }
+        }
+    }
 
     fn build_test_vec() -> Vec<Point> {
         vec![
@@ -189,65 +201,65 @@ mod tests {
     #[test]
     fn is_empty_test() {
         {
-            let matrix = PointMatrix::new_from_vec(build_test_vec());
+            let matrix = Matrix::new_from_vec(build_test_vec());
             assert_eq!(false, matrix.is_empty());
         }
         {
-            let matrix = PointMatrix::new_from_vec(build_min_test_vec());
+            let matrix = Matrix::new_from_vec(build_min_test_vec());
             assert_eq!(false, matrix.is_empty());
         }
         {
-            assert!(PointMatrix::new(0, BTreeMap::new()).is_empty());
+            assert!(Matrix::new(0, BTreeMap::new()).is_empty());
         }
         {
             let mut rows = BTreeMap::new();
-            rows.insert(0, PointRow::new());
-            rows.insert(1, PointRow::new());
-            rows.insert(2, PointRow::new());
-            rows.insert(3, PointRow::new());
-            assert!(PointMatrix::new(0, rows).is_empty());
+            rows.insert(0, Row::new());
+            rows.insert(1, Row::new());
+            rows.insert(2, Row::new());
+            rows.insert(3, Row::new());
+            assert!(Matrix::new(0, rows).is_empty());
         }
     }
 
     #[test]
     fn x_max_test() {
-        let matrix = PointMatrix::new_from_vec(build_test_vec());
+        let matrix = Matrix::new_from_vec(build_test_vec());
         assert_eq!(101, matrix.x_max().unwrap());
     }
 
     #[test]
     fn y_max_test() {
-        let matrix = PointMatrix::new_from_vec(build_test_vec());
+        let matrix = Matrix::new_from_vec(build_test_vec());
         assert_eq!(20, matrix.y_max().unwrap());
     }
 
     #[test]
     fn x_y_max_test() {
-        let matrix = PointMatrix::new_from_vec(build_test_vec());
+        let matrix = Matrix::new_from_vec(build_test_vec());
         assert_eq!((101, 20), matrix.x_y_max().unwrap());
     }
 
     #[test]
     fn x_min_test() {
-        let matrix = PointMatrix::new_from_vec(build_min_test_vec());
+        let matrix = Matrix::new_from_vec(build_min_test_vec());
         assert_eq!(8, matrix.x_min().unwrap());
     }
 
     #[test]
     fn y_min_test() {
-        let matrix = PointMatrix::new_from_vec(build_min_test_vec());
+        let matrix = Matrix::new_from_vec(build_min_test_vec());
         assert_eq!(4, matrix.y_min().unwrap());
     }
 
     #[test]
     fn x_y_min_test() {
-        let matrix = PointMatrix::new_from_vec(build_min_test_vec());
+        let matrix = Matrix::new_from_vec(build_min_test_vec());
         assert_eq!((8, 4), matrix.x_y_min().unwrap());
     }
 
     #[test]
     fn map_test() {
-        let matrix = PointMatrix::new_from_vec(vec![
+        let matrix = Matrix::new_from_vec(vec![
             Point::new(0, 10),
             Point::new(10, 20),
         ]).map(|p| { Point::new(p.x + 5, p.y + 7) });

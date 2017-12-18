@@ -1,6 +1,7 @@
 mod rate_series;
 
 pub use self::rate_series::RateSeries;
+use rate_provider::Currency;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Rate {
@@ -19,11 +20,11 @@ pub struct Rate {
 }
 
 impl Rate {
-    pub fn new(price_usd: f32, price_eur: f32) -> Self {
+    pub fn new(currency: Currency, price_usd: f32, price_eur: f32) -> Self {
         Rate {
-            id: "bitcoin".to_owned(),
-            name: "Bitcoin".to_owned(),
-            symbol: "BTC".to_owned(),
+            id: currency.name().to_owned().to_lowercase(),
+            name: currency.name().to_owned(),
+            symbol: currency.symbol().to_owned(),
             price_btc: 1.0,
             price_usd: price_usd.clone(),
             price_eur: price_eur.clone(),

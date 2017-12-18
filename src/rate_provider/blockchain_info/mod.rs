@@ -5,6 +5,7 @@ use rate;
 use self::intermediate_rate::*;
 use super::ProviderError;
 use super::RateProvider;
+use super::Currency;
 
 pub struct BlockchainInfo {}
 
@@ -20,7 +21,14 @@ impl BlockchainInfo {
 }
 
 impl RateProvider for BlockchainInfo {
-    fn get() -> Result<rate::Rate, ProviderError> {
+    fn get_name() -> &'static str {
+        "BlockchainInfo"
+    }
+
+    fn get(currency: Currency) -> Result<rate::Rate, ProviderError> {
+        if currency != Currency::Bitcoin {
+            return Err(ProviderError::new("This provider only support Bitcoin"));
+        }
         let response = Self::download("https://blockchain.info/ticker")?;
         Self::convert(&response)
     }
@@ -29,6 +37,7 @@ impl RateProvider for BlockchainInfo {
         let currency_rates: CurrencyRateMap = Self::convert_to_internal_rates(response)?;
 
         Ok(rate::Rate::new(
+            Currency::Bitcoin,
             match currency_rates.get("USD") {
                 Some(rate) => rate.last,
                 None => 0.0,
@@ -47,7 +56,7 @@ mod tests {
 
     #[test]
     fn get_test() {
-        let result: Result<rate::Rate, ProviderError> = <BlockchainInfo as RateProvider>::get();
+        let result: Result<rate::Rate, ProviderError> = <BlockchainInfo as RateProvider>::get(Currency::Bitcoin);
 
         assert!(result.is_ok())
     }

@@ -6,6 +6,7 @@ extern crate clap;
 extern crate term_size;
 extern crate chrono;
 
+mod term;
 mod rate;
 mod rate_provider;
 mod util;
@@ -28,10 +29,7 @@ fn get_mode(matches: &ArgMatches) -> chart::Mode {
 }
 
 fn get_chart_width(matches: &ArgMatches) -> usize {
-    let default = match term_size::dimensions() {
-        Some((default, _)) => default,
-        None => 200,
-    };
+    let default = 0;
     match matches.value_of("width") {
         Some(arg) => {
             arg.parse().unwrap_or(default)
@@ -41,10 +39,7 @@ fn get_chart_width(matches: &ArgMatches) -> usize {
 }
 
 fn get_chart_height(matches: &ArgMatches) -> usize {
-    let default = match term_size::dimensions() {
-        Some((_, default)) => default,
-        None => 30,
-    };
+    let default = 0;
     match matches.value_of("height") {
         Some(arg) => {
             arg.parse().unwrap_or(default)
@@ -54,16 +49,16 @@ fn get_chart_height(matches: &ArgMatches) -> usize {
 }
 
 fn get_interval(matches: &ArgMatches) -> u64 {
-    let default: u64 = 2;
+    let default: u64 = 1_000;
     match matches.value_of("interval") {
         Some(arg) => {
             let interval_int = arg.parse::<u64>();
             if let Ok(interval_int) = interval_int {
-                return 1000 * interval_int;
+                return 1_000 * interval_int;
             };
             match arg.parse::<f64>() {
                 Ok(interval_float) => {
-                    (1000.0 * interval_float) as u64
+                    (1_000.0 * interval_float) as u64
                 }
                 Err(_) => default,
             }
@@ -94,11 +89,30 @@ fn get_provider_type(matches: &ArgMatches) -> String {
     }
 }
 
+fn get_currency(matches: &ArgMatches) -> rate_provider::Currency {
+    let input = matches.value_of("CURRENCY").unwrap();
+    if let Some(c) = rate_provider::Currency::new(input) {
+        return c;
+    }
+
+    panic!("Currency {} not supported", input)
+}
+
+fn get_all_provider_types() -> String {
+    rate_provider::get_all_names()
+        .iter().map(|s| s.to_string()).collect::<Vec<String>>()
+        .join(", ")
+}
+
 fn main() {
     let matches = App::new("rcoin")
         .version("1.0")
         .author("Daniel Corn <info@cundd.net>")
         .about("Watch Bitcoin prices")
+        .arg(Arg::with_name("CURRENCY")
+            .help("Sets the currency to monitor")
+            .required(true)
+            .index(1))
         .arg(Arg::with_name("mode")
             .long("mode")
             .short("m")
@@ -131,7 +145,7 @@ fn main() {
             .takes_value(true))
         .arg(Arg::with_name("provider_type")
             .long("provider-type")
-            .help("Fetch rates from the given provider")
+            .help(&format!("Fetch rates from the given provider [{}]", get_all_provider_types()))
             .takes_value(true))
         .get_matches();
 
@@ -139,15 +153,25 @@ fn main() {
     let fill = get_chart_fill(&matches);
     let space = get_chart_space(&matches);
     let provider_type = get_provider_type(&matches);
-    let chart = chart::Chart::new(get_chart_width(&matches), get_chart_height(&matches), get_mode(&matches));
+    let currency = get_currency(&matches);
+
+    let chart = chart::Chart::new(
+        get_chart_width(&matches),
+        get_chart_height(&matches),
+        1,
+        7,
+        get_mode(&matches),
+    );
 
     let mut printer = rate_printer::RatePrinter::new(chart, &provider_type, &fill, &space);
     loop {
-        if printer.get_and_print_rates().is_err() {
+        if printer.get_and_print_rates(currency).is_err() {
             break;
         }
 
         let interval = time::Duration::from_millis(interval_seconds);
         thread::sleep(interval);
     }
+
+    term::show_cursor();
 }

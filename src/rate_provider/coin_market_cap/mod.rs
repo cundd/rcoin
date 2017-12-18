@@ -4,6 +4,7 @@ use serde_json;
 use rate;
 use super::ProviderError;
 use super::RateProvider;
+use super::Currency;
 use self::intermediate_rate::*;
 
 pub struct CoinMarketCap {}
@@ -20,17 +21,27 @@ impl CoinMarketCap {
 }
 
 impl RateProvider for CoinMarketCap {
+    fn get_name() -> &'static str {
+        "CoinMarketCap"
+    }
     fn get_all() -> Result<Vec<rate::Rate>, ProviderError> {
         let response = Self::download("https://api.coinmarketcap.com/v1/ticker/?convert=EUR&limit=10")?;
         Self::convert_all(&response)
     }
 
-    fn get() -> Result<rate::Rate, ProviderError> {
+    fn get(currency: Currency) -> Result<rate::Rate, ProviderError> {
         let all = CoinMarketCap::get_all()?;
 
-        match all.into_iter().find(|rate| { rate.symbol == "BTC" }) {
+        match all.into_iter()
+            .find(|rate| {
+                let current_currency = Currency::new(rate.symbol.as_str());
+                if let Some(current_currency) = current_currency {
+                    return current_currency == currency;
+                }
+                false
+            }) {
             Some(rate) => Ok(rate),
-            None => Err(ProviderError::new("No Bitcoin rate found".to_string())),
+            None => Err(ProviderError::new(format!("No rate for currency {} found", currency.name()))),
         }
     }
 
@@ -62,7 +73,7 @@ mod tests {
 
     #[test]
     fn get_test() {
-        let result: Result<rate::Rate, ProviderError> = <CoinMarketCap as RateProvider>::get();
+        let result: Result<rate::Rate, ProviderError> = <CoinMarketCap as RateProvider>::get(Currency::Bitcoin);
 
         assert!(result.is_ok())
     }

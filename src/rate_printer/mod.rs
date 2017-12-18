@@ -1,9 +1,12 @@
+use std::io::Write;
+use std::io::stdout;
 use chrono::prelude::*;
 use util;
 use rate;
 use rate::RateSeries;
 use chart::*;
 use rate_provider;
+
 
 mod trend;
 
@@ -17,7 +20,7 @@ pub struct RatePrinter<'a> {
 
 impl<'a> RatePrinter<'a> {
     pub fn new(chart: Chart, provider_type: &'a str, fill: &'a str, space: &'a str) -> Self {
-        let time_series = rate::RateSeries::new(1 * chart.width());
+        let time_series = rate::RateSeries::new(1 * (chart.width() - chart.y_scala_width));
 
         RatePrinter {
             space,
@@ -28,34 +31,16 @@ impl<'a> RatePrinter<'a> {
         }
     }
 
-    pub fn get_and_print_rates(&mut self) -> Result<rate::Rate, ()> {
-        match rate_provider::get(self.provider_type) {
+    pub fn get_and_print_rates(&mut self, currency: rate_provider::Currency) -> Result<rate::Rate, ()> {
+        match rate_provider::get(self.provider_type, currency) {
             Ok(rate) => {
-                let now: DateTime<Local> = Local::now();
                 let ts_clone = self.time_series.clone();
                 let last_rate = ts_clone.last();
-                let trend = trend::get_trend_sign(&rate, last_rate, true);
                 self.time_series.push(rate.clone());
 
                 print!("{}[2J", 27 as char); // Clear the screen
-                print!(
-                    "{}",
-                    self.chart.draw_points_with_callback(
-                        build_points_from_time_series(&self.time_series),
-                        |point: Option<Point>| self.draw_callback(&rate, last_rate, point)
-                    )
-                );
-
-                println!(
-                    "{}  {}  {} ${} / €{}",
-                    now.format("%Y-%m-%d %H:%M:%S"),
-                    trend,
-                    util::str_pad(&rate.symbol, 5, ' '),
-                    util::str_pad(&rate.price_usd.to_string(), 10, ' '),
-                    util::str_pad(&rate.price_eur.to_string(), 10, ' ')
-                );
-
-
+                self.print_chart(&rate, last_rate);
+                self.print_footer(&rate, last_rate);
 
                 Ok(rate)
             }
@@ -64,6 +49,53 @@ impl<'a> RatePrinter<'a> {
                 Err(())
             }
         }
+    }
+
+    fn print_chart(&self, rate: &rate::Rate, last_rate: Option<&rate::Rate>) {
+        let conf = configuration::CallbackConfiguration {
+            draw_row: |n: usize| util::str_left_pad(&format!("{} |", n), self.chart.y_scala_width - 1, ' ').to_string(),
+            draw_point: |point: Option<Point>| self.draw_callback(&rate, last_rate, point),
+        };
+
+        print!(
+            "{}",
+            self.chart.draw_points_with_configuration(
+                build_points_from_time_series(&self.time_series),
+                &conf,
+            )
+        );
+    }
+
+    fn print_footer(&self, rate: &rate::Rate, last_rate: Option<&rate::Rate>) {
+        let now: DateTime<Local> = Local::now();
+
+        let col_1 = now.format("%Y-%m-%d %H:%M:%S%.3f").to_string();
+        let col_2 = trend::get_trend_sign(&rate, last_rate, true);
+        let col_3 = format!(
+            "{} ${} / €{}",
+            util::str_pad(&rate.symbol, 5, ' '),
+            util::str_pad(&rate.price_usd.to_string(), 10, ' '),
+            util::str_pad(&rate.price_eur.to_string(), 10, ' ')
+        );
+        let col_left_visible_width = col_1.chars().count()
+            + 1
+            + trend::get_trend_sign(&rate, last_rate, false).chars().count()
+            + 1
+            + col_3.chars().count()
+            + 1;
+
+        let space_left = self.chart.width() as isize - col_left_visible_width as isize;
+
+        let provider_name = rate_provider::get_name(self.provider_type).unwrap_or("");
+        let col_4 = format!("[{}]", provider_name);
+
+        if space_left >= (col_4.chars().count() as isize) {
+            print!("{} {} {} {}", col_1, col_2, col_3, util::str_left_pad(&format!("[{}]", provider_name), space_left as usize, ' '));
+        } else {
+            print!("{} {} {}", col_1, col_2, col_3);
+        }
+
+        stdout().flush().unwrap();
     }
 
     fn draw_callback(&self, current_rate: &rate::Rate, last_rate: Option<&rate::Rate>, point: Option<Point>) -> String {
@@ -87,7 +119,7 @@ fn build_points_from_time_series(time_series: &RateSeries) -> Vec<Point> {
 
     for rate in time_series.data() {
         let len = points.len();
-        points.push(Point::new(len, rate.price_eur as usize));
+        points.push(Point::new(len, rate.price_usd.round() as usize));
     }
 
     points

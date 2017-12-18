@@ -1,5 +1,6 @@
 pub use super::point::Point;
 use super::point_matrix::PointMatrix;
+use super::configuration::*;
 
 pub struct Canvas {
     width: usize,
@@ -40,8 +41,7 @@ impl Canvas {
         })
     }
 
-    pub fn draw_points_with_callback<F>(&self, matrix: PointMatrix, draw_callback: F) -> String
-        where F: Fn(Option<Point>) -> String {
+    pub fn draw_points_with_configuration(&self, matrix: PointMatrix, conf: &Configuration) -> String {
         if matrix.is_empty() {
             return "".to_string();
         }
@@ -50,20 +50,29 @@ impl Canvas {
         let y_start = self.y_start;
 
         for n in (y_start..y_start + self.height).rev() {
-            buffer.push_str(&self.draw_row(n, &matrix, &draw_callback));
+            buffer.push_str(&conf.draw_row(n));
+            buffer.push_str(&self.draw_row_with_configuration(n, &matrix, conf));
             buffer.push_str("\n");
         }
         buffer
     }
 
-    fn draw_row<F>(&self, row: usize, matrix: &PointMatrix, draw_callback: &F) -> String
+    pub fn draw_points_with_callback<F>(&self, matrix: PointMatrix, draw_callback: F) -> String
         where F: Fn(Option<Point>) -> String {
+        let conf = super::configuration::CallbackConfiguration {
+            draw_row: |_: usize| "".to_string(),
+            draw_point: draw_callback,
+        };
+        self.draw_points_with_configuration(matrix, &conf)
+    }
+
+    fn draw_row_with_configuration(&self, row: usize, matrix: &PointMatrix, conf: &Configuration) -> String {
         let mut buffer = String::with_capacity(self.width);
 
         let x_start = self.x_start;
 
         for column in x_start..self.width + x_start {
-            buffer.push_str(&draw_callback(matrix.get(row, column)));
+            buffer.push_str(&conf.draw_point(matrix.get(row, column)));
         }
 
         buffer
@@ -93,7 +102,7 @@ mod tests {
                     Point::new(100, 20),   // Will be clipped
                     Point::new(101, 20)    // Will be clipped
                 ]),
-                "."
+                ".",
             )
         );
 
@@ -112,7 +121,7 @@ mod tests {
                     Point::new(100, 20),   // Will be clipped
                     Point::new(101, 20)    // Will be clipped
                 ]),
-                "😊"
+                "😊",
             )
         );
 
@@ -132,7 +141,7 @@ mod tests {
                     Point::new(100, 20),   // Will be clipped
                     Point::new(101, 20)    // Will be clipped
                 ]),
-                "😊"
+                "😊",
             )
         );
     }
@@ -157,7 +166,7 @@ mod tests {
                     Point::new(101, 20)    // Will be clipped
                 ]),
                 ".",
-                " "
+                " ",
             )
         );
 
@@ -177,7 +186,7 @@ mod tests {
                     Point::new(101, 20)    // Will be clipped
                 ]),
                 "😊",
-                " "
+                " ",
             )
         );
 
@@ -198,7 +207,7 @@ mod tests {
                     Point::new(101, 20)    // Will be clipped
                 ]),
                 "😊",
-                "_"
+                "_",
             )
         );
     }
@@ -227,7 +236,7 @@ mod tests {
                         Some(_) => "x".to_string(),
                         None => "_".to_string(),
                     }
-                }
+                },
             )
         );
     }
