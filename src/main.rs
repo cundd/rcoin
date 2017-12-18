@@ -11,6 +11,7 @@ mod rate;
 mod rate_provider;
 mod util;
 mod chart;
+mod matrix;
 mod rate_printer;
 
 use std::{thread, time};

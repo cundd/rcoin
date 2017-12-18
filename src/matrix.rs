@@ -2,36 +2,40 @@ use std::collections::BTreeMap;
 
 type Row<I> = BTreeMap<usize, I>;
 
+pub trait CoordinatesTrait {
+    fn x(&self) -> usize;
+    fn y(&self) -> usize;
+}
+
 #[derive(Debug, Clone)]
-pub struct Matrix<I: Clone> {
+pub struct Matrix<I: Clone + CoordinatesTrait> {
     len: usize,
     rows: BTreeMap<usize, Row<I>>,
 }
 
-impl<I: Clone> Matrix<I> {
-//    pub fn new_from_vec(points: Vec<I>) -> Self {
-//        let mut rows: BTreeMap<usize, Row<I>> = BTreeMap::new();
-//        let len = points.len();
-//
-//        for point in points {
-//            let mut handled = false;
-//
-//            {
-//                let row_option = rows.get_mut(&point.y);
-//                if let Some(row) = row_option {
-//                    row.insert(point.x, point);
-//                    handled = true;
-//                }
-//            }
-//            if !handled {
-//                let mut row = Row::new();
-//                row.insert(point.x, point);
-//                rows.insert(point.y, row);
-//            }
-//        }
-//
-//        Matrix { len, rows }
-//    }
+impl<I: Clone + CoordinatesTrait> Matrix<I> {
+    pub fn new_from_vec(points: Vec<I>) -> Self {
+        let mut rows: BTreeMap<usize, Row<I>> = BTreeMap::new();
+        let len = points.len();
+
+        for point in points {
+            if rows.contains_key(&point.y()) {
+                let row_option = rows.get_mut(&point.y());
+                if let Some(row) = row_option {
+                    row.insert(point.x(), point);
+                }
+            } else {
+                let mut row = Row::new();
+                let y = point.y();
+                row.insert(point.x(), point);
+                rows.insert(y, row);
+            }
+        }
+
+
+        Matrix { len, rows }
+    }
+
 
     #[allow(unused)]
     fn new(len: usize, rows: BTreeMap<usize, Row<I>>) -> Self {
@@ -42,8 +46,8 @@ impl<I: Clone> Matrix<I> {
         where F: Fn(I) -> I {
         let mut temp_vec: Vec<I> = Vec::with_capacity(self.len);
         for (_, row) in &self.rows {
-            for (_, &point) in row {
-                temp_vec.push(callback(point));
+            for (_, point) in row {
+                temp_vec.push(callback(point.clone()));
             }
         }
 
@@ -167,6 +171,16 @@ mod tests {
         }
     }
 
+    impl CoordinatesTrait for Point {
+        fn x(&self) -> usize {
+            self.x
+        }
+
+        fn y(&self) -> usize {
+            self.y
+        }
+    }
+
     fn build_test_vec() -> Vec<Point> {
         vec![
             Point::new(0, 0),
@@ -209,14 +223,14 @@ mod tests {
             assert_eq!(false, matrix.is_empty());
         }
         {
-            assert!(Matrix::new(0, BTreeMap::new()).is_empty());
+            assert!(Matrix::new(0, BTreeMap::<usize, Row<Point>>::new()).is_empty());
         }
         {
             let mut rows = BTreeMap::new();
-            rows.insert(0, Row::new());
-            rows.insert(1, Row::new());
-            rows.insert(2, Row::new());
-            rows.insert(3, Row::new());
+            rows.insert(0, Row::<Point>::new());
+            rows.insert(1, Row::<Point>::new());
+            rows.insert(2, Row::<Point>::new());
+            rows.insert(3, Row::<Point>::new());
             assert!(Matrix::new(0, rows).is_empty());
         }
     }

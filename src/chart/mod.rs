@@ -4,14 +4,13 @@ pub mod point;
 pub mod point_drawing;
 pub mod configuration;
 mod canvas;
-mod point_matrix;
 mod transform;
 
 use term_size;
 pub use self::point::Point;
 pub use self::mode::Mode;
 use self::canvas::Canvas;
-use self::point_matrix::PointMatrix;
+use matrix::Matrix;
 
 #[allow(unused)]
 pub const BLOCK_FULL: &'static str = "\u{2588}";
@@ -58,7 +57,7 @@ impl Chart {
 
     #[allow(unused)]
     pub fn draw_points(&self, points: Vec<Point>) -> String {
-        let matrix = PointMatrix::new_from_vec(points);
+        let matrix = Matrix::new_from_vec(points);
         if let Some(canvas) = self.get_canvas(&matrix) {
             match self.mode {
                 Mode::Truncate => canvas.draw_points(matrix),
@@ -76,7 +75,7 @@ impl Chart {
 
     #[allow(unused)]
     pub fn draw_points_with_configuration(&self, points: Vec<Point>, conf: &self::configuration::Configuration) -> String {
-        let matrix = PointMatrix::new_from_vec(points);
+        let matrix = Matrix::new_from_vec(points);
         if let Some(canvas) = self.get_canvas(&matrix) {
             match self.mode {
                 Mode::Truncate => canvas.draw_points_with_configuration(matrix, conf),
@@ -94,7 +93,7 @@ impl Chart {
 
     #[allow(unused)]
     pub fn draw_points_with_symbol(&self, points: Vec<Point>, symbol: &str) -> String {
-        let matrix = PointMatrix::new_from_vec(points);
+        let matrix = Matrix::new_from_vec(points);
         if let Some(canvas) = self.get_canvas(&matrix) {
             match self.mode {
                 Mode::Truncate => canvas.draw_points_with_symbol(matrix, symbol),
@@ -112,7 +111,7 @@ impl Chart {
 
     #[allow(unused)]
     pub fn draw_points_with_symbols(&self, points: Vec<Point>, point_symbol: &str, placeholder: &str) -> String {
-        let matrix = PointMatrix::new_from_vec(points);
+        let matrix = Matrix::new_from_vec(points);
         if let Some(canvas) = self.get_canvas(&matrix) {
             match self.mode {
                 Mode::Truncate => canvas.draw_points_with_symbols(matrix, point_symbol, placeholder),
@@ -131,7 +130,7 @@ impl Chart {
     #[allow(unused)]
     pub fn draw_points_with_callback<F>(&self, points: Vec<Point>, draw_callback: F) -> String
         where F: Fn(Option<Point>) -> String {
-        let matrix = PointMatrix::new_from_vec(points);
+        let matrix = Matrix::new_from_vec(points);
         if let Some(canvas) = self.get_canvas(&matrix) {
             match self.mode {
                 Mode::Truncate => canvas.draw_points_with_callback(matrix, &draw_callback),
@@ -147,7 +146,7 @@ impl Chart {
         }
     }
 
-    fn get_canvas(&self, point_matrix: &PointMatrix) -> Option<Canvas> {
+    fn get_canvas(&self, point_matrix: &Matrix<Point>) -> Option<Canvas> {
         let x_start = point_matrix.x_min();
         let y_start = point_matrix.y_min();
         if x_start.is_none() || y_start.is_none() {
@@ -317,21 +316,5 @@ mod tests {
                 },
             )
         );
-
-//        let canvas = Chart::new(10, 2, Mode::Truncate);
-//        assert_eq!(
-//            "x_________\n_x________\n",
-//            canvas.draw_points_with_callback(
-//                vec![
-//                    Point::new(0, 1000),
-//                ],
-//                |point: Option<Point>| {
-//                    match point {
-//                        Some(_) => "x".to_string(),
-//                        None => "_".to_string(),
-//                    }
-//                }
-//            )
-//        );
     }
 }

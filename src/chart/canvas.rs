@@ -1,5 +1,5 @@
 pub use super::point::Point;
-use super::point_matrix::PointMatrix;
+use matrix::Matrix;
 use super::configuration::*;
 
 pub struct Canvas {
@@ -14,7 +14,7 @@ impl Canvas {
         Canvas { width, height, x_start, y_start }
     }
 
-    pub fn draw_points(&self, matrix: PointMatrix) -> String {
+    pub fn draw_points(&self, matrix: Matrix<Point>) -> String {
         self.draw_points_with_callback(matrix, |point: Option<Point>| {
             match point {
                 Some(_) => super::BLOCK_FULL.to_string(),
@@ -23,7 +23,7 @@ impl Canvas {
         })
     }
 
-    pub fn draw_points_with_symbol(&self, matrix: PointMatrix, symbol: &str) -> String {
+    pub fn draw_points_with_symbol(&self, matrix: Matrix<Point>, symbol: &str) -> String {
         self.draw_points_with_callback(matrix, |point: Option<Point>| {
             match point {
                 Some(_) => symbol.to_string(),
@@ -32,7 +32,7 @@ impl Canvas {
         })
     }
 
-    pub fn draw_points_with_symbols(&self, matrix: PointMatrix, point_symbol: &str, placeholder: &str) -> String {
+    pub fn draw_points_with_symbols(&self, matrix: Matrix<Point>, point_symbol: &str, placeholder: &str) -> String {
         self.draw_points_with_callback(matrix, |point: Option<Point>| {
             match point {
                 Some(_) => point_symbol.to_string(),
@@ -41,7 +41,7 @@ impl Canvas {
         })
     }
 
-    pub fn draw_points_with_configuration(&self, matrix: PointMatrix, conf: &Configuration) -> String {
+    pub fn draw_points_with_configuration(&self, matrix: Matrix<Point>, conf: &Configuration) -> String {
         if matrix.is_empty() {
             return "".to_string();
         }
@@ -57,7 +57,7 @@ impl Canvas {
         buffer
     }
 
-    pub fn draw_points_with_callback<F>(&self, matrix: PointMatrix, draw_callback: F) -> String
+    pub fn draw_points_with_callback<F>(&self, matrix: Matrix<Point>, draw_callback: F) -> String
         where F: Fn(Option<Point>) -> String {
         let conf = super::configuration::CallbackConfiguration {
             draw_row: |_: usize| "".to_string(),
@@ -66,7 +66,7 @@ impl Canvas {
         self.draw_points_with_configuration(matrix, &conf)
     }
 
-    fn draw_row_with_configuration(&self, row: usize, matrix: &PointMatrix, conf: &Configuration) -> String {
+    fn draw_row_with_configuration(&self, row: usize, matrix: &Matrix<Point>, conf: &Configuration) -> String {
         let mut buffer = String::with_capacity(self.width);
 
         let x_start = self.x_start;
@@ -90,7 +90,7 @@ mod tests {
         assert_eq!(
             " .        \n.         \n",
             canvas.draw_points_with_symbol(
-                PointMatrix::new_from_vec(vec![
+                Matrix::new_from_vec(vec![
                     Point::new(0, 0),
                     Point::new(1, 1),
                     Point::new(2, 2),      // Will be clipped
@@ -109,7 +109,7 @@ mod tests {
         assert_eq!(
             " 😊        \n😊         \n",
             canvas.draw_points_with_symbol(
-                PointMatrix::new_from_vec(vec![
+                Matrix::new_from_vec(vec![
                     Point::new(0, 0),
                     Point::new(1, 1),
                     Point::new(2, 2),      // Will be clipped
@@ -128,7 +128,7 @@ mod tests {
         assert_eq!(
             " 😊       😊\n😊         \n",
             canvas.draw_points_with_symbol(
-                PointMatrix::new_from_vec(vec![
+                Matrix::new_from_vec(vec![
                     Point::new(0, 0),
                     Point::new(1, 1),
                     Point::new(9, 1),
@@ -153,7 +153,7 @@ mod tests {
         assert_eq!(
             " .        \n.         \n",
             canvas.draw_points_with_symbols(
-                PointMatrix::new_from_vec(vec![
+                Matrix::new_from_vec(vec![
                     Point::new(0, 0),
                     Point::new(1, 1),
                     Point::new(2, 2),      // Will be clipped
@@ -173,7 +173,7 @@ mod tests {
         assert_eq!(
             " 😊        \n😊         \n",
             canvas.draw_points_with_symbols(
-                PointMatrix::new_from_vec(vec![
+                Matrix::new_from_vec(vec![
                     Point::new(0, 0),
                     Point::new(1, 1),
                     Point::new(2, 2),      // Will be clipped
@@ -193,7 +193,7 @@ mod tests {
         assert_eq!(
             "_😊_______😊\n😊_________\n",
             canvas.draw_points_with_symbols(
-                PointMatrix::new_from_vec(vec![
+                Matrix::new_from_vec(vec![
                     Point::new(0, 0),
                     Point::new(1, 1),
                     Point::new(9, 1),
@@ -219,7 +219,7 @@ mod tests {
         assert_eq!(
             "_x________\nx_________\n",
             canvas.draw_points_with_callback(
-                PointMatrix::new_from_vec(vec![
+                Matrix::new_from_vec(vec![
                     Point::new(0, 0),
                     Point::new(1, 1),
                     Point::new(2, 2),      // Will be clipped
