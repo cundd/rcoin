@@ -147,12 +147,17 @@ impl Chart {
     }
 
     fn get_canvas(&self, point_matrix: &Matrix<Point>) -> Option<Canvas> {
-        let x_start = point_matrix.x_min();
-        let y_start = point_matrix.y_min();
-        if x_start.is_none() || y_start.is_none() {
+        let x_min_option = point_matrix.x_min();
+        let y_min_option = point_matrix.y_min();
+        if x_min_option.is_none() || y_min_option.is_none() {
             return None;
         }
-        Some(Canvas::new(self.width() - self.y_scala_width, self.height() - self.x_scala_width, x_start.unwrap(), y_start.unwrap()))
+        let x_min = x_min_option.unwrap();
+        let y_min = y_min_option.unwrap();
+        let x_start = if x_min > 0 { x_min - 1 } else { 0 };
+        let y_start = if y_min > 0 { y_min - 1 } else { 0 };
+
+        Some(Canvas::new(self.width() - self.y_scala_width, self.height() - self.x_scala_width, x_start, y_start))
     }
 }
 
