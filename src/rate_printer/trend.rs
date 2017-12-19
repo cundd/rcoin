@@ -34,16 +34,16 @@ pub fn get_trend_sign(current_rate: &rate::Rate, last_rate: Option<&rate::Rate>,
 
     if colors {
         match trend {
-            -1 => color::bg_red("v"),
-            1 => color::bg_green("^"),
-            0 => color::bg_dark_gray("o"),
+            -1 => color::red("▼"),
+            1 => color::green("▲"),
+            0 => " ".to_string(),
             _ => " ".to_string(),
         }
     } else {
         match trend {
-            -1 => "v".to_string(),
-            1 => "^".to_string(),
-            0 => "o".to_string(),
+            -1 => "▼".to_string(),
+            1 => "▲".to_string(),
+            0 => " ".to_string(),
             _ => "x".to_string(),
         }
     }
