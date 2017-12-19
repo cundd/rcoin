@@ -16,6 +16,7 @@ pub struct RatePrinter<'a> {
     provider_type: &'a str,
     time_series: rate::RateSeries,
     chart: Chart,
+    run_number: usize,
 }
 
 impl<'a> RatePrinter<'a> {
@@ -28,16 +29,19 @@ impl<'a> RatePrinter<'a> {
             provider_type,
             chart,
             time_series,
+            run_number: 0,
         }
     }
 
     pub fn get_and_print_rates(&mut self, currency: rate_provider::Currency) -> Result<rate::Rate, ()> {
+        self.run_number += 1;
         match rate_provider::get(self.provider_type, currency) {
             Ok(rate) => {
                 let ts_clone = self.time_series.clone();
                 let last_rate = ts_clone.last();
                 self.time_series.push(rate.clone());
 
+                println!();
                 print!("{}[2J", 27 as char); // Clear the screen
                 self.print_chart(&rate, last_rate);
                 self.print_footer(&rate, last_rate);
