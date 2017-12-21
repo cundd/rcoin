@@ -4,8 +4,8 @@ use super::Chart;
 
 fn scale_with_factors(matrix: &Matrix<Point>, factor_x: f32, factor_y: f32) -> Matrix<Point> {
     matrix.map(|p| Point::new(
-        (p.x as f32 * factor_x).round() as usize,
-        (p.y as f32 * factor_y).round() as usize,
+        (p.x as f32 * factor_x).floor() as usize,
+        (p.y as f32 * factor_y).floor() as usize,
     ))
 }
 
@@ -18,7 +18,9 @@ fn get_factor_x(chart: &Chart, matrix: &Matrix<Point>, max: Option<f32>) -> f32 
     if matrix.is_empty() {
         return 1.0;
     }
-    let result = (chart.width() - 2 - chart.x_scala_width) as f32 / (matrix.x_max().unwrap() as f32 - matrix.x_min().unwrap() as f32);
+    let result = (chart.width() - chart.x_scala_width) as f32 /
+        (1 + matrix.x_max().unwrap() - matrix.x_min().unwrap()) as f32;
+    //   ^__ include the max point
 
     match max {
         None => result,
@@ -34,7 +36,9 @@ fn get_factor_y(chart: &Chart, matrix: &Matrix<Point>, max: Option<f32>) -> f32 
     if matrix.is_empty() {
         return 1.0;
     }
-    let result = (chart.height() - 2 - chart.y_scala_width) as f32 / (matrix.y_max().unwrap() as f32 - matrix.y_min().unwrap() as f32);
+    let result = (chart.height() - chart.y_scala_width) as f32 /
+        (1 + matrix.y_max().unwrap() - matrix.y_min().unwrap()) as f32;
+    //   ^__ include the max point
 
     match max {
         None => result,
