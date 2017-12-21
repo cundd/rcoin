@@ -57,7 +57,7 @@ impl Chart {
 
     #[allow(unused)]
     pub fn draw_points(&self, points: Vec<Point>) -> String {
-        let matrix = Matrix::new_from_vec(points);
+        let matrix = Matrix::from_vec(points);
         if let Some(canvas) = self.get_canvas(&matrix) {
             match self.mode {
                 Mode::Truncate => canvas.draw_points(matrix),
@@ -75,7 +75,7 @@ impl Chart {
 
     #[allow(unused)]
     pub fn draw_points_with_configuration(&self, points: Vec<Point>, conf: &self::configuration::Configuration) -> String {
-        let matrix = Matrix::new_from_vec(points);
+        let matrix = Matrix::from_vec(points);
         if let Some(canvas) = self.get_canvas(&matrix) {
             match self.mode {
                 Mode::Truncate => canvas.draw_points_with_configuration(matrix, conf),
@@ -93,7 +93,7 @@ impl Chart {
 
     #[allow(unused)]
     pub fn draw_points_with_symbol(&self, points: Vec<Point>, symbol: &str) -> String {
-        let matrix = Matrix::new_from_vec(points);
+        let matrix = Matrix::from_vec(points);
         if let Some(canvas) = self.get_canvas(&matrix) {
             match self.mode {
                 Mode::Truncate => canvas.draw_points_with_symbol(matrix, symbol),
@@ -111,7 +111,7 @@ impl Chart {
 
     #[allow(unused)]
     pub fn draw_points_with_symbols(&self, points: Vec<Point>, point_symbol: &str, placeholder: &str) -> String {
-        let matrix = Matrix::new_from_vec(points);
+        let matrix = Matrix::from_vec(points);
         if let Some(canvas) = self.get_canvas(&matrix) {
             match self.mode {
                 Mode::Truncate => canvas.draw_points_with_symbols(matrix, point_symbol, placeholder),
@@ -130,7 +130,7 @@ impl Chart {
     #[allow(unused)]
     pub fn draw_points_with_callback<F>(&self, points: Vec<Point>, draw_callback: F) -> String
         where F: Fn(Option<Point>) -> String {
-        let matrix = Matrix::new_from_vec(points);
+        let matrix = Matrix::from_vec(points);
         if let Some(canvas) = self.get_canvas(&matrix) {
             match self.mode {
                 Mode::Truncate => canvas.draw_points_with_callback(matrix, &draw_callback),
@@ -319,6 +319,138 @@ mod tests {
                         None => "_".to_string(),
                     }
                 },
+            )
+        );
+    }
+
+    #[test]
+    fn scale_not_needed_test() {
+        let chart_with_truncate = Chart::new(6, 6, 0, 0, Mode::Truncate).draw_points_with_symbols(
+            vec![
+                Point::new(0, 0),
+                Point::new(5, 5),
+            ],
+            "x", "_",
+        );
+        let chart_with_scale = Chart::new(6, 6, 0, 0, Mode::Scale).draw_points_with_symbols(
+            vec![
+                Point::new(0, 0),
+                Point::new(5, 5),
+            ],
+            "x", "_",
+        );
+
+        assert_eq!(
+            chart_with_truncate,
+            chart_with_scale
+        );
+    }
+
+    #[test]
+    fn scale_test() {
+        let chart_with_truncate = Chart::new(6, 6, 0, 0, Mode::Truncate).draw_points_with_symbols(
+            vec![
+                Point::new(0, 0),
+                Point::new(2, 2),
+                Point::new(5, 5),
+            ],
+            "x", "_",
+        );
+        let chart_with_scale = Chart::new(6, 6, 0, 0, Mode::Scale).draw_points_with_symbols(
+            vec![
+                Point::new(0, 0),
+                Point::new(5, 5),
+                Point::new(11, 11),
+            ],
+            "x", "_",
+        );
+
+        assert_eq!(
+            chart_with_truncate,
+            chart_with_scale
+        );
+
+        assert_eq!(
+            chart_with_truncate,
+            Chart::new(6, 6, 0, 0, Mode::ScaleDown).draw_points_with_symbols(
+                vec![
+                    Point::new(0, 0),
+                    Point::new(5, 5),
+                    Point::new(11, 11),
+                ],
+                "x", "_",
+            )
+        );
+    }
+
+    #[test]
+    fn scale_down_test() {
+        let chart_with_truncate = Chart::new(6, 6, 0, 0, Mode::Truncate).draw_points_with_symbols(
+            vec![
+                Point::new(0, 0),
+                Point::new(2, 2),
+                Point::new(5, 5),
+            ],
+            "x", "_",
+        );
+
+        assert_eq!(
+            chart_with_truncate,
+            Chart::new(6, 6, 0, 0, Mode::Scale).draw_points_with_symbols(
+                vec![
+                    Point::new(0, 0),
+                    Point::new(5, 5),
+                    Point::new(11, 11),
+                ],
+                "x", "_",
+            )
+        );
+
+        assert_eq!(
+            chart_with_truncate,
+            Chart::new(6, 6, 0, 0, Mode::ScaleDown).draw_points_with_symbols(
+                vec![
+                    Point::new(0, 0),
+                    Point::new(5, 5),
+                    Point::new(11, 11),
+                ],
+                "x", "_",
+            )
+        );
+    }
+
+    #[test]
+    fn do_not_scale_up_test() {
+        assert_eq!(
+            Chart::new(6, 6, 0, 0, Mode::Truncate).draw_points_with_symbols(
+                vec![
+                    Point::new(0, 0),
+                    Point::new(2, 2),
+                ],
+                "x", "_",
+            ),
+            Chart::new(6, 6, 0, 0, Mode::ScaleDown).draw_points_with_symbols(
+                vec![
+                    Point::new(0, 0),
+                    Point::new(2, 2),
+                ],
+                "x", "_",
+            )
+        );
+        assert_ne!(
+            Chart::new(6, 6, 0, 0, Mode::Truncate).draw_points_with_symbols(
+                vec![
+                    Point::new(0, 0),
+                    Point::new(2, 2),
+                ],
+                "x", "_",
+            ),
+            Chart::new(6, 6, 0, 0, Mode::Scale).draw_points_with_symbols(
+                vec![
+                    Point::new(0, 0),
+                    Point::new(2, 2),
+                ],
+                "x", "_",
             )
         );
     }

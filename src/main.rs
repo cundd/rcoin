@@ -49,6 +49,13 @@ fn get_chart_height(matches: &ArgMatches) -> usize {
     }
 }
 
+fn get_history_size(matches: &ArgMatches) -> Option<usize> {
+    match matches.value_of("history-size") {
+        Some(arg) => arg.parse::<usize>().ok(),
+        None => None,
+    }
+}
+
 fn get_interval(matches: &ArgMatches) -> u64 {
     let default: u64 = 1_000;
     match matches.value_of("interval") {
@@ -109,7 +116,7 @@ fn main() {
     let matches = App::new("rcoin")
         .version("1.0")
         .author("Daniel Corn <info@cundd.net>")
-        .about("Watch Bitcoin prices")
+        .about("Watch cryptocurrency prices")
         .arg(Arg::with_name("CURRENCY")
             .help("Sets the currency to monitor")
             .required(true)
@@ -118,6 +125,11 @@ fn main() {
             .long("mode")
             .short("m")
             .help("Sets the chart's display mode")
+            .takes_value(true))
+        .arg(Arg::with_name("history-size")
+            .long("history-size")
+            .short("s")
+            .help("Sets the size of the history")
             .takes_value(true))
         .arg(Arg::with_name("width")
             .long("width")
@@ -131,17 +143,15 @@ fn main() {
             .takes_value(true))
         .arg(Arg::with_name("fill")
             .long("fill")
-            .short("f")
             .help("Sets the chart's fill character")
             .takes_value(true))
         .arg(Arg::with_name("space")
             .long("space")
-            .short("s")
             .help("Sets the chart's space character")
             .takes_value(true))
         .arg(Arg::with_name("interval")
-            .short("i")
             .long("interval")
+            .short("i")
             .help("Sets the interval between requests (in seconds)")
             .takes_value(true))
         .arg(Arg::with_name("provider_type")
@@ -164,7 +174,7 @@ fn main() {
         get_mode(&matches),
     );
 
-    let mut printer = rate_printer::RatePrinter::new(chart, &provider_type, &fill, &space);
+    let mut printer = rate_printer::RatePrinter::new(chart, &provider_type, &fill, &space, get_history_size(&matches));
     loop {
         if printer.get_and_print_rates(currency).is_err() {
             break;
@@ -176,3 +186,4 @@ fn main() {
 
     term::show_cursor();
 }
+

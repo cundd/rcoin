@@ -90,7 +90,7 @@ mod tests {
         assert_eq!(
             " .        \n.         \n",
             canvas.draw_points_with_symbol(
-                Matrix::new_from_vec(vec![
+                Matrix::from_vec(vec![
                     Point::new(0, 0),
                     Point::new(1, 1),
                     Point::new(2, 2),      // Will be clipped
@@ -109,7 +109,7 @@ mod tests {
         assert_eq!(
             " 😊        \n😊         \n",
             canvas.draw_points_with_symbol(
-                Matrix::new_from_vec(vec![
+                Matrix::from_vec(vec![
                     Point::new(0, 0),
                     Point::new(1, 1),
                     Point::new(2, 2),      // Will be clipped
@@ -128,7 +128,7 @@ mod tests {
         assert_eq!(
             " 😊       😊\n😊         \n",
             canvas.draw_points_with_symbol(
-                Matrix::new_from_vec(vec![
+                Matrix::from_vec(vec![
                     Point::new(0, 0),
                     Point::new(1, 1),
                     Point::new(9, 1),
@@ -153,7 +153,7 @@ mod tests {
         assert_eq!(
             " .        \n.         \n",
             canvas.draw_points_with_symbols(
-                Matrix::new_from_vec(vec![
+                Matrix::from_vec(vec![
                     Point::new(0, 0),
                     Point::new(1, 1),
                     Point::new(2, 2),      // Will be clipped
@@ -173,7 +173,7 @@ mod tests {
         assert_eq!(
             " 😊        \n😊         \n",
             canvas.draw_points_with_symbols(
-                Matrix::new_from_vec(vec![
+                Matrix::from_vec(vec![
                     Point::new(0, 0),
                     Point::new(1, 1),
                     Point::new(2, 2),      // Will be clipped
@@ -193,7 +193,7 @@ mod tests {
         assert_eq!(
             "_😊_______😊\n😊_________\n",
             canvas.draw_points_with_symbols(
-                Matrix::new_from_vec(vec![
+                Matrix::from_vec(vec![
                     Point::new(0, 0),
                     Point::new(1, 1),
                     Point::new(9, 1),
@@ -219,7 +219,7 @@ mod tests {
         assert_eq!(
             "_x________\nx_________\n",
             canvas.draw_points_with_callback(
-                Matrix::new_from_vec(vec![
+                Matrix::from_vec(vec![
                     Point::new(0, 0),
                     Point::new(1, 1),
                     Point::new(2, 2),      // Will be clipped

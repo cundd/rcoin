@@ -2,6 +2,7 @@ mod rate_series;
 
 pub use self::rate_series::RateSeries;
 use rate_provider::Currency;
+use matrix::CoordinatesTrait;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Rate {
@@ -29,5 +30,15 @@ impl Rate {
             price_usd: price_usd.clone(),
             price_eur: price_eur.clone(),
         }
+    }
+}
+
+impl CoordinatesTrait for Rate {
+    fn x(&self) -> usize {
+        0
+    }
+
+    fn y(&self) -> usize {
+        self.price_usd.round() as usize
     }
 }

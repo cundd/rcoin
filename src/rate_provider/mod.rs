@@ -7,6 +7,8 @@ mod blockchain_info;
 mod crypto_compare;
 mod provider_error;
 
+use std::time::SystemTime;
+
 pub use self::currency::Currency;
 use serde_json;
 use self::curl::easy::Easy;
@@ -22,6 +24,8 @@ trait RateProvider {
     }
 
     fn download<'a>(url: &'a str) -> Result<String, ProviderError> {
+        let before_download = SystemTime::now();
+
         let mut handle = Easy::new();
         let mut data = Vec::new();
         let mut output = String::new();
@@ -38,6 +42,13 @@ trait RateProvider {
                 return Err(ProviderError::new(e.to_string()));
             }
         }
+
+
+        let difference = SystemTime::now().duration_since(before_download)
+            .expect("SystemTime::duration_since failed");
+        println!();
+        println!("{:?}", difference);
+//        println!("Download time {}", Local::now());
         Ok(output)
     }
 

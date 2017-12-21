@@ -14,7 +14,7 @@ pub struct Matrix<I: Clone + CoordinatesTrait> {
 }
 
 impl<I: Clone + CoordinatesTrait> Matrix<I> {
-    pub fn new_from_vec(points: Vec<I>) -> Self {
+    pub fn from_slice(points: &[I]) -> Self {
         let mut rows: BTreeMap<usize, Row<I>> = BTreeMap::new();
         let len = points.len();
 
@@ -22,18 +22,21 @@ impl<I: Clone + CoordinatesTrait> Matrix<I> {
             if rows.contains_key(&point.y()) {
                 let row_option = rows.get_mut(&point.y());
                 if let Some(row) = row_option {
-                    row.insert(point.x(), point);
+                    row.insert(point.x(), point.clone());
                 }
             } else {
                 let mut row = Row::new();
                 let y = point.y();
-                row.insert(point.x(), point);
+                row.insert(point.x(), point.clone());
                 rows.insert(y, row);
             }
         }
 
-
         Matrix { len, rows }
+    }
+
+    pub fn from_vec(points: Vec<I>) -> Self {
+        Self::from_slice(&points)
     }
 
 
@@ -51,7 +54,7 @@ impl<I: Clone + CoordinatesTrait> Matrix<I> {
             }
         }
 
-        Matrix::new_from_vec(temp_vec)
+        Matrix::from_vec(temp_vec)
     }
 
     pub fn get(&self, row: usize, column: usize) -> Option<I> {
@@ -102,6 +105,7 @@ impl<I: Clone + CoordinatesTrait> Matrix<I> {
         }
     }
 
+    #[allow(unused)]
     pub fn x_y_max(&self) -> Option<(usize, usize)> {
         if self.is_empty() {
             return None;
@@ -143,6 +147,7 @@ impl<I: Clone + CoordinatesTrait> Matrix<I> {
         }
     }
 
+    #[allow(unused)]
     pub fn x_y_min(&self) -> Option<(usize, usize)> {
         if self.is_empty() {
             return None;
@@ -215,11 +220,11 @@ mod tests {
     #[test]
     fn is_empty_test() {
         {
-            let matrix = Matrix::new_from_vec(build_test_vec());
+            let matrix = Matrix::from_vec(build_test_vec());
             assert_eq!(false, matrix.is_empty());
         }
         {
-            let matrix = Matrix::new_from_vec(build_min_test_vec());
+            let matrix = Matrix::from_vec(build_min_test_vec());
             assert_eq!(false, matrix.is_empty());
         }
         {
@@ -237,43 +242,43 @@ mod tests {
 
     #[test]
     fn x_max_test() {
-        let matrix = Matrix::new_from_vec(build_test_vec());
+        let matrix = Matrix::from_vec(build_test_vec());
         assert_eq!(101, matrix.x_max().unwrap());
     }
 
     #[test]
     fn y_max_test() {
-        let matrix = Matrix::new_from_vec(build_test_vec());
+        let matrix = Matrix::from_vec(build_test_vec());
         assert_eq!(20, matrix.y_max().unwrap());
     }
 
     #[test]
     fn x_y_max_test() {
-        let matrix = Matrix::new_from_vec(build_test_vec());
+        let matrix = Matrix::from_vec(build_test_vec());
         assert_eq!((101, 20), matrix.x_y_max().unwrap());
     }
 
     #[test]
     fn x_min_test() {
-        let matrix = Matrix::new_from_vec(build_min_test_vec());
+        let matrix = Matrix::from_vec(build_min_test_vec());
         assert_eq!(8, matrix.x_min().unwrap());
     }
 
     #[test]
     fn y_min_test() {
-        let matrix = Matrix::new_from_vec(build_min_test_vec());
+        let matrix = Matrix::from_vec(build_min_test_vec());
         assert_eq!(4, matrix.y_min().unwrap());
     }
 
     #[test]
     fn x_y_min_test() {
-        let matrix = Matrix::new_from_vec(build_min_test_vec());
+        let matrix = Matrix::from_vec(build_min_test_vec());
         assert_eq!((8, 4), matrix.x_y_min().unwrap());
     }
 
     #[test]
     fn map_test() {
-        let matrix = Matrix::new_from_vec(vec![
+        let matrix = Matrix::from_vec(vec![
             Point::new(0, 10),
             Point::new(10, 20),
         ]).map(|p| { Point::new(p.x + 5, p.y + 7) });
