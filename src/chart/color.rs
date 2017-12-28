@@ -1,5 +1,5 @@
 #[allow(unused)]
-pub fn color(message: &str, color: u8) -> String {
+pub fn style(message: &str, color: u8) -> String {
     format!(
         "{}[{}m{}{}[{}m",
         27 as char,
@@ -13,200 +13,200 @@ pub fn color(message: &str, color: u8) -> String {
 #[allow(unused)]
 /// Output the text in red
 pub fn reverse(message: &str) -> String {
-    color(message, REVERSE)
+    style(message, REVERSE)
 }
 
 #[allow(unused)]
 /// Output the text in red
 pub fn red(message: &str) -> String {
-    color(message, RED)
+    style(message, RED)
 }
 
 #[allow(unused)]
 /// Output the text in green
 pub fn green(message: &str) -> String {
-    color(message, GREEN)
+    style(message, GREEN)
 }
 
 #[allow(unused)]
 /// Output the text in yellow
 pub fn yellow(message: &str) -> String {
-    color(message, YELLOW)
+    style(message, YELLOW)
 }
 
 #[allow(unused)]
 /// Output the text in blue
 pub fn blue(message: &str) -> String {
-    color(message, BLUE)
+    style(message, BLUE)
 }
 
 #[allow(unused)]
 /// Output the text in magenta
 pub fn magenta(message: &str) -> String {
-    color(message, MAGENTA)
+    style(message, MAGENTA)
 }
 
 #[allow(unused)]
 /// Output the text in cyan
 pub fn cyan(message: &str) -> String {
-    color(message, CYAN)
+    style(message, CYAN)
 }
 
 #[allow(unused)]
 /// Output the text in light_gray
 pub fn light_gray(message: &str) -> String {
-    color(message, LIGHT_GRAY)
+    style(message, LIGHT_GRAY)
 }
 
 #[allow(unused)]
 /// Output the text in dark_gray
 pub fn dark_gray(message: &str) -> String {
-    color(message, DARK_GRAY)
+    style(message, DARK_GRAY)
 }
 
 #[allow(unused)]
 /// Output the text in light_red
 pub fn light_red(message: &str) -> String {
-    color(message, LIGHT_RED)
+    style(message, LIGHT_RED)
 }
 
 #[allow(unused)]
 /// Output the text in light_green
 pub fn light_green(message: &str) -> String {
-    color(message, LIGHT_GREEN)
+    style(message, LIGHT_GREEN)
 }
 
 #[allow(unused)]
 /// Output the text in light_yellow
 pub fn light_yellow(message: &str) -> String {
-    color(message, LIGHT_YELLOW)
+    style(message, LIGHT_YELLOW)
 }
 
 #[allow(unused)]
 /// Output the text in light_blue
 pub fn light_blue(message: &str) -> String {
-    color(message, LIGHT_BLUE)
+    style(message, LIGHT_BLUE)
 }
 
 #[allow(unused)]
 /// Output the text in light_magenta
 pub fn light_magenta(message: &str) -> String {
-    color(message, LIGHT_MAGENTA)
+    style(message, LIGHT_MAGENTA)
 }
 
 #[allow(unused)]
 /// Output the text in light_cyan
 pub fn light_cyan(message: &str) -> String {
-    color(message, LIGHT_CYAN)
+    style(message, LIGHT_CYAN)
 }
 
 #[allow(unused)]
 /// Output the text in white
 pub fn white(message: &str) -> String {
-    color(message, WHITE)
+    style(message, WHITE)
 }
 
 
 #[allow(unused)]
 /// Draw the background default_background
 pub fn bg_default_background(message: &str) -> String {
-    color(message, BG_DEFAULT_BACKGROUND)
+    style(message, BG_DEFAULT_BACKGROUND)
 }
 
 #[allow(unused)]
 /// Draw the background black
 pub fn bg_black(message: &str) -> String {
-    color(message, BG_BLACK)
+    style(message, BG_BLACK)
 }
 
 #[allow(unused)]
 /// Draw the background red
 pub fn bg_red(message: &str) -> String {
-    color(message, BG_RED)
+    style(message, BG_RED)
 }
 
 #[allow(unused)]
 /// Draw the background green
 pub fn bg_green(message: &str) -> String {
-    color(message, BG_GREEN)
+    style(message, BG_GREEN)
 }
 
 #[allow(unused)]
 /// Draw the background yellow
 pub fn bg_yellow(message: &str) -> String {
-    color(message, BG_YELLOW)
+    style(message, BG_YELLOW)
 }
 
 #[allow(unused)]
 /// Draw the background blue
 pub fn bg_blue(message: &str) -> String {
-    color(message, BG_BLUE)
+    style(message, BG_BLUE)
 }
 
 #[allow(unused)]
 /// Draw the background magenta
 pub fn bg_magenta(message: &str) -> String {
-    color(message, BG_MAGENTA)
+    style(message, BG_MAGENTA)
 }
 
 #[allow(unused)]
 /// Draw the background cyan
 pub fn bg_cyan(message: &str) -> String {
-    color(message, BG_CYAN)
+    style(message, BG_CYAN)
 }
 
 #[allow(unused)]
 /// Draw the background light_gray
 pub fn bg_light_gray(message: &str) -> String {
-    color(message, BG_LIGHT_GRAY)
+    style(message, BG_LIGHT_GRAY)
 }
 
 #[allow(unused)]
 /// Draw the background dark_gray
 pub fn bg_dark_gray(message: &str) -> String {
-    color(message, BG_DARK_GRAY)
+    style(message, BG_DARK_GRAY)
 }
 
 #[allow(unused)]
 /// Draw the background light_red
 pub fn bg_light_red(message: &str) -> String {
-    color(message, BG_LIGHT_RED)
+    style(message, BG_LIGHT_RED)
 }
 
 #[allow(unused)]
 /// Draw the background light_green
 pub fn bg_light_green(message: &str) -> String {
-    color(message, BG_LIGHT_GREEN)
+    style(message, BG_LIGHT_GREEN)
 }
 
 #[allow(unused)]
 /// Draw the background light_yellow
 pub fn bg_light_yellow(message: &str) -> String {
-    color(message, BG_LIGHT_YELLOW)
+    style(message, BG_LIGHT_YELLOW)
 }
 
 #[allow(unused)]
 /// Draw the background light_blue
 pub fn bg_light_blue(message: &str) -> String {
-    color(message, BG_LIGHT_BLUE)
+    style(message, BG_LIGHT_BLUE)
 }
 
 #[allow(unused)]
 /// Draw the background light_magenta
 pub fn bg_light_magenta(message: &str) -> String {
-    color(message, BG_LIGHT_MAGENTA)
+    style(message, BG_LIGHT_MAGENTA)
 }
 
 #[allow(unused)]
 /// Draw the background light_cyan
 pub fn bg_light_cyan(message: &str) -> String {
-    color(message, BG_LIGHT_CYAN)
+    style(message, BG_LIGHT_CYAN)
 }
 
 #[allow(unused)]
 /// Draw the background white
 pub fn bg_white(message: &str) -> String {
-    color(message, BG_WHITE)
+    style(message, BG_WHITE)
 }
 
 
@@ -455,7 +455,7 @@ mod tests {
 
     #[test]
     fn color_test() {
-        assert_eq!("\u{1b}[32mmy message\u{1b}[0m", color("my message", GREEN));
+        assert_eq!("\u{1b}[32mmy message\u{1b}[0m", style("my message", GREEN));
     }
 
     #[test]
@@ -536,102 +536,102 @@ mod tests {
     #[test]
     fn draw_background_default_background_test() {
         assert_eq!("\u{1b}[49mmy message\u{1b}[0m", bg_default_background("my message"));
-        assert_eq!("\u{1b}[49mmy message\u{1b}[0m", color("my message", BG_DEFAULT_BACKGROUND));
+        assert_eq!("\u{1b}[49mmy message\u{1b}[0m", style("my message", BG_DEFAULT_BACKGROUND));
     }
 
     #[test]
     fn draw_background_black_test() {
         assert_eq!("\u{1b}[40mmy message\u{1b}[0m", bg_black("my message"));
-        assert_eq!("\u{1b}[40mmy message\u{1b}[0m", color("my message", BG_BLACK));
+        assert_eq!("\u{1b}[40mmy message\u{1b}[0m", style("my message", BG_BLACK));
     }
 
     #[test]
     fn draw_background_red_test() {
         assert_eq!("\u{1b}[41mmy message\u{1b}[0m", bg_red("my message"));
-        assert_eq!("\u{1b}[41mmy message\u{1b}[0m", color("my message", BG_RED));
+        assert_eq!("\u{1b}[41mmy message\u{1b}[0m", style("my message", BG_RED));
     }
 
     #[test]
     fn draw_background_green_test() {
         assert_eq!("\u{1b}[42mmy message\u{1b}[0m", bg_green("my message"));
-        assert_eq!("\u{1b}[42mmy message\u{1b}[0m", color("my message", BG_GREEN));
+        assert_eq!("\u{1b}[42mmy message\u{1b}[0m", style("my message", BG_GREEN));
     }
 
     #[test]
     fn draw_background_yellow_test() {
         assert_eq!("\u{1b}[43mmy message\u{1b}[0m", bg_yellow("my message"));
-        assert_eq!("\u{1b}[43mmy message\u{1b}[0m", color("my message", BG_YELLOW));
+        assert_eq!("\u{1b}[43mmy message\u{1b}[0m", style("my message", BG_YELLOW));
     }
 
     #[test]
     fn draw_background_blue_test() {
         assert_eq!("\u{1b}[44mmy message\u{1b}[0m", bg_blue("my message"));
-        assert_eq!("\u{1b}[44mmy message\u{1b}[0m", color("my message", BG_BLUE));
+        assert_eq!("\u{1b}[44mmy message\u{1b}[0m", style("my message", BG_BLUE));
     }
 
     #[test]
     fn draw_background_magenta_test() {
         assert_eq!("\u{1b}[45mmy message\u{1b}[0m", bg_magenta("my message"));
-        assert_eq!("\u{1b}[45mmy message\u{1b}[0m", color("my message", BG_MAGENTA));
+        assert_eq!("\u{1b}[45mmy message\u{1b}[0m", style("my message", BG_MAGENTA));
     }
 
     #[test]
     fn draw_background_cyan_test() {
         assert_eq!("\u{1b}[46mmy message\u{1b}[0m", bg_cyan("my message"));
-        assert_eq!("\u{1b}[46mmy message\u{1b}[0m", color("my message", BG_CYAN));
+        assert_eq!("\u{1b}[46mmy message\u{1b}[0m", style("my message", BG_CYAN));
     }
 
     #[test]
     fn draw_background_light_gray_test() {
         assert_eq!("\u{1b}[47mmy message\u{1b}[0m", bg_light_gray("my message"));
-        assert_eq!("\u{1b}[47mmy message\u{1b}[0m", color("my message", BG_LIGHT_GRAY));
+        assert_eq!("\u{1b}[47mmy message\u{1b}[0m", style("my message", BG_LIGHT_GRAY));
     }
 
     #[test]
     fn draw_background_dark_gray_test() {
         assert_eq!("\u{1b}[100mmy message\u{1b}[0m", bg_dark_gray("my message"));
-        assert_eq!("\u{1b}[100mmy message\u{1b}[0m", color("my message", BG_DARK_GRAY));
+        assert_eq!("\u{1b}[100mmy message\u{1b}[0m", style("my message", BG_DARK_GRAY));
     }
 
     #[test]
     fn draw_background_light_red_test() {
         assert_eq!("\u{1b}[101mmy message\u{1b}[0m", bg_light_red("my message"));
-        assert_eq!("\u{1b}[101mmy message\u{1b}[0m", color("my message", BG_LIGHT_RED));
+        assert_eq!("\u{1b}[101mmy message\u{1b}[0m", style("my message", BG_LIGHT_RED));
     }
 
     #[test]
     fn draw_background_light_green_test() {
         assert_eq!("\u{1b}[102mmy message\u{1b}[0m", bg_light_green("my message"));
-        assert_eq!("\u{1b}[102mmy message\u{1b}[0m", color("my message", BG_LIGHT_GREEN));
+        assert_eq!("\u{1b}[102mmy message\u{1b}[0m", style("my message", BG_LIGHT_GREEN));
     }
 
     #[test]
     fn draw_background_light_yellow_test() {
         assert_eq!("\u{1b}[103mmy message\u{1b}[0m", bg_light_yellow("my message"));
-        assert_eq!("\u{1b}[103mmy message\u{1b}[0m", color("my message", BG_LIGHT_YELLOW));
+        assert_eq!("\u{1b}[103mmy message\u{1b}[0m", style("my message", BG_LIGHT_YELLOW));
     }
 
     #[test]
     fn draw_background_light_blue_test() {
         assert_eq!("\u{1b}[104mmy message\u{1b}[0m", bg_light_blue("my message"));
-        assert_eq!("\u{1b}[104mmy message\u{1b}[0m", color("my message", BG_LIGHT_BLUE));
+        assert_eq!("\u{1b}[104mmy message\u{1b}[0m", style("my message", BG_LIGHT_BLUE));
     }
 
     #[test]
     fn draw_background_light_magenta_test() {
         assert_eq!("\u{1b}[105mmy message\u{1b}[0m", bg_light_magenta("my message"));
-        assert_eq!("\u{1b}[105mmy message\u{1b}[0m", color("my message", BG_LIGHT_MAGENTA));
+        assert_eq!("\u{1b}[105mmy message\u{1b}[0m", style("my message", BG_LIGHT_MAGENTA));
     }
 
     #[test]
     fn draw_background_light_cyan_test() {
         assert_eq!("\u{1b}[106mmy message\u{1b}[0m", bg_light_cyan("my message"));
-        assert_eq!("\u{1b}[106mmy message\u{1b}[0m", color("my message", BG_LIGHT_CYAN));
+        assert_eq!("\u{1b}[106mmy message\u{1b}[0m", style("my message", BG_LIGHT_CYAN));
     }
 
     #[test]
     fn draw_background_white_test() {
         assert_eq!("\u{1b}[107mmy message\u{1b}[0m", bg_white("my message"));
-        assert_eq!("\u{1b}[107mmy message\u{1b}[0m", color("my message", BG_WHITE));
+        assert_eq!("\u{1b}[107mmy message\u{1b}[0m", style("my message", BG_WHITE));
     }
 }
