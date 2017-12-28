@@ -1,16 +1,17 @@
 pub mod color;
 pub mod mode;
-pub mod point;
 pub mod point_drawing;
 pub mod configuration;
+pub mod padding;
+mod point;
 mod canvas;
 mod transform;
 
 use term_size;
-pub use self::point::Point;
 pub use self::mode::Mode;
 use self::canvas::Canvas;
 use matrix::Matrix;
+use matrix::PointTrait;
 
 #[allow(unused)]
 pub const BLOCK_FULL: &'static str = "\u{2588}";
@@ -24,12 +25,12 @@ pub struct Chart {
     _width: usize,
     _height: usize,
     pub y_scala_width: usize,
-    pub x_scala_width: usize,
+    pub x_scala_height: usize,
 }
 
 impl Chart {
-    pub fn new(width: usize, height: usize, x_scala_width: usize, y_scala_width: usize, mode: Mode) -> Self {
-        Chart { _width: width, _height: height, mode, x_scala_width, y_scala_width }
+    pub fn new(width: usize, height: usize, x_scala_height: usize, y_scala_width: usize, mode: Mode) -> Self {
+        Chart { _width: width, _height: height, mode, x_scala_height, y_scala_width }
     }
 
     pub fn width(&self) -> usize {
@@ -55,8 +56,9 @@ impl Chart {
         }
     }
 
+
     #[allow(unused)]
-    pub fn draw_points(&self, points: Vec<Point>) -> String {
+    pub fn draw_points<T: PointTrait>(&self, points: Vec<T>) -> String {
         let matrix = Matrix::from_vec(points);
         if let Some(canvas) = self.get_canvas(&matrix) {
             match self.mode {
@@ -74,7 +76,7 @@ impl Chart {
     }
 
     #[allow(unused)]
-    pub fn draw_points_with_configuration(&self, points: Vec<Point>, conf: &self::configuration::Configuration) -> String {
+    pub fn draw_points_with_configuration<T: PointTrait>(&self, points: Vec<T>, conf: &configuration::Configuration<T>) -> String {
         let matrix = Matrix::from_vec(points);
         if let Some(canvas) = self.get_canvas(&matrix) {
             match self.mode {
@@ -92,7 +94,7 @@ impl Chart {
     }
 
     #[allow(unused)]
-    pub fn draw_points_with_symbol(&self, points: Vec<Point>, symbol: &str) -> String {
+    pub fn draw_points_with_symbol<T: PointTrait>(&self, points: Vec<T>, symbol: &str) -> String {
         let matrix = Matrix::from_vec(points);
         if let Some(canvas) = self.get_canvas(&matrix) {
             match self.mode {
@@ -110,7 +112,7 @@ impl Chart {
     }
 
     #[allow(unused)]
-    pub fn draw_points_with_symbols(&self, points: Vec<Point>, point_symbol: &str, placeholder: &str) -> String {
+    pub fn draw_points_with_symbols<T: PointTrait>(&self, points: Vec<T>, point_symbol: &str, placeholder: &str) -> String {
         let matrix = Matrix::from_vec(points);
         if let Some(canvas) = self.get_canvas(&matrix) {
             match self.mode {
@@ -128,8 +130,8 @@ impl Chart {
     }
 
     #[allow(unused)]
-    pub fn draw_points_with_callback<F>(&self, points: Vec<Point>, draw_callback: F) -> String
-        where F: Fn(Option<Point>) -> String {
+    pub fn draw_points_with_callback<F, T: PointTrait>(&self, points: Vec<T>, draw_callback: F) -> String
+        where F: Fn(Option<T>) -> String {
         let matrix = Matrix::from_vec(points);
         if let Some(canvas) = self.get_canvas(&matrix) {
             match self.mode {
@@ -146,24 +148,25 @@ impl Chart {
         }
     }
 
-    fn get_canvas(&self, point_matrix: &Matrix<Point>) -> Option<Canvas> {
+    fn get_canvas<T: PointTrait>(&self, point_matrix: &Matrix<T>) -> Option<Canvas> {
         let x_min_option = point_matrix.x_min();
         let y_min_option = point_matrix.y_min();
         if x_min_option.is_none() || y_min_option.is_none() {
             return None;
         }
-        let x_min = x_min_option.unwrap();
-        let y_min = y_min_option.unwrap();
-        let x_start = if x_min > 0 { x_min - 1 } else { 0 };
-        let y_start = if y_min > 0 { y_min - 1 } else { 0 };
 
-        Some(Canvas::new(self.width() - self.y_scala_width, self.height() - self.x_scala_width, x_start, y_start))
+        Some(Canvas::new(
+            self.width() - self.y_scala_width,
+            self.height() - self.x_scala_height,
+            padding::Padding::new(0, 0, 1, 1),
+        ))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use super::point::Point;
 
     #[test]
     fn draw_points_with_symbol_test() {

@@ -24,6 +24,12 @@ trait RateProvider {
     }
 
     fn download<'a>(url: &'a str) -> Result<String, ProviderError> {
+        let response = Self::download_with_meta(url)?;
+        let (body, _) = response;
+        Ok(body)
+    }
+
+    fn download_with_meta<'a>(url: &'a str) -> Result<(String, Option<u64>), ProviderError> {
         let before_download = SystemTime::now();
 
         let mut handle = Easy::new();
@@ -43,13 +49,12 @@ trait RateProvider {
             }
         }
 
+        let load_time = match SystemTime::now().duration_since(before_download) {
+            Ok(difference) => Some(difference.as_secs() * 1_000_000_000 + difference.subsec_nanos() as u64),
+            Err(_) => None,
+        };
 
-        let difference = SystemTime::now().duration_since(before_download)
-            .expect("SystemTime::duration_since failed");
-        println!();
-        println!("{:?}", difference);
-//        println!("Download time {}", Local::now());
-        Ok(output)
+        Ok((output, load_time))
     }
 
     fn convert(response: &str) -> Result<rate::Rate, ProviderError> {

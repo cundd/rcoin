@@ -52,14 +52,14 @@ impl RateProvider for CoinMarketCap {
         let mut rates = Vec::with_capacity(internal_rates.len());
 
         for internal_rate in internal_rates {
-            rates.push(rate::Rate {
-                id: internal_rate.id,
-                name: internal_rate.name,
-                symbol: internal_rate.symbol,
-                price_btc: internal_rate.price_btc.parse().unwrap_or(0.0),
-                price_usd: internal_rate.price_usd.parse().unwrap_or(0.0),
-                price_eur: internal_rate.price_eur.parse().unwrap_or(0.0),
-            });
+            let currency = Currency::new(internal_rate.name);
+            if let Some(currency) = currency {
+                rates.push(rate::Rate::new(
+                    currency,
+                    internal_rate.price_usd.parse().unwrap_or(0.0),
+                    internal_rate.price_eur.parse().unwrap_or(0.0),
+                ));
+            }
         }
 
         Ok(rates)

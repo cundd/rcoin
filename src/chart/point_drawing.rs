@@ -1,16 +1,12 @@
-use super::point::Point;
+use super::PointTrait;
 use super::configuration::Configuration;
 
+#[allow(unused)]
 pub trait PointDrawing {
-    #[allow(unused)]
-    fn draw_points(&self, points: Vec<Point>) -> String;
-    #[allow(unused)]
-    fn draw_points_with_configuration(&self, points: Vec<Point>, conf: &Configuration) -> String;
-    #[allow(unused)]
-    fn draw_points_with_symbol(&self, points: Vec<Point>, symbol: &str) -> String;
-    #[allow(unused)]
-    fn draw_points_with_symbols(&self, points: Vec<Point>, point_symbol: &str, placeholder: &str) -> String;
-    #[allow(unused)]
-    fn draw_points_with_callback<F>(&self, points: Vec<Point>, draw_callback: F) -> String
-        where F: Fn(Option<Point>) -> String;
+    fn draw_points<T: PointTrait>(&self, points: Vec<T>) -> String;
+    fn draw_points_with_configuration<T: PointTrait>(&self, points: Vec<T>, conf: &Configuration<T>) -> String;
+    fn draw_points_with_symbol<T: PointTrait>(&self, points: Vec<T>, symbol: &str) -> String;
+    fn draw_points_with_symbols<T: PointTrait>(&self, points: Vec<T>, point_symbol: &str, placeholder: &str) -> String;
+    fn draw_points_with_callback<F, T: PointTrait>(&self, points: Vec<T>, draw_callback: F) -> String
+        where F: Fn(Option<T>) -> String;
 }

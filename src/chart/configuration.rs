@@ -1,40 +1,60 @@
-use super::Point;
+use std::collections::BTreeMap;
+use super::PointTrait;
 
-pub trait Configuration {
-    fn draw_row(&self, row_number: usize) -> String;
 
-    fn draw_point(&self, point: Option<Point>) -> String;
+type Row<I: PointTrait> = BTreeMap<usize, I>;
+
+pub trait Configuration<T: PointTrait> {
+    fn draw_row(&self, row: Option<&Row<T>>, row_number: usize) -> String;
+
+    fn draw_point(&self, point: Option<T>) -> String;
 }
 
-pub struct CallbackConfiguration<R, P>
-    where R: Fn(usize) -> String,
-          P: Fn(Option<Point>) -> String {
+pub struct CallbackConfiguration<R, P, T: PointTrait>
+    where
+        R: Fn(Option<&Row<T>>, usize) -> String,
+        P: Fn(Option<T>) -> String {
     pub draw_row: R,
     pub draw_point: P,
+    _use_t: Option<T>,
 }
 
-impl<R, P> CallbackConfiguration<R, P>
-    where R: Fn(usize) -> String,
-          P: Fn(Option<Point>) -> String {
-    pub fn draw_row(&self, row_number: usize) -> String {
+impl<R, P, T: PointTrait> CallbackConfiguration<R, P, T>
+    where
+        R: Fn(Option<&Row<T>>, usize) -> String,
+        P: Fn(Option<T>) -> String
+{
+    pub fn new(draw_row: R, draw_point: P) -> Self {
+        CallbackConfiguration {
+            draw_row,
+            draw_point,
+            _use_t: None,
+        }
+    }
+}
+
+impl<R, P, T: PointTrait> CallbackConfiguration<R, P, T>
+    where R: Fn(Option<&Row<T>>, usize) -> String,
+          P: Fn(Option<T>) -> String {
+    pub fn draw_row(&self, row: Option<&Row<T>>, row_number: usize) -> String {
         let callback = &self.draw_row;
-        callback(row_number)
+        callback(row, row_number)
     }
 
-    pub fn draw_point(&self, point: Option<Point>) -> String {
+    pub fn draw_point(&self, point: Option<T>) -> String {
         let callback = &self.draw_point;
         callback(point)
     }
 }
 
-impl<R, P> Configuration for CallbackConfiguration<R, P>
-    where R: Fn(usize) -> String,
-          P: Fn(Option<Point>) -> String {
-    fn draw_row(&self, row_number: usize) -> String {
-        CallbackConfiguration::draw_row(self, row_number)
+impl<R, P, T: PointTrait> Configuration<T> for CallbackConfiguration<R, P, T>
+    where R: Fn(Option<&Row<T>>, usize) -> String,
+          P: Fn(Option<T>) -> String {
+    fn draw_row(&self, row: Option<&Row<T>>, row_number: usize) -> String {
+        CallbackConfiguration::draw_row(self, row, row_number)
     }
 
-    fn draw_point(&self, point: Option<Point>) -> String {
+    fn draw_point(&self, point: Option<T>) -> String {
         CallbackConfiguration::draw_point(self, point)
     }
 }
@@ -43,16 +63,32 @@ impl<R, P> Configuration for CallbackConfiguration<R, P>
 mod tests {
     use super::*;
 
+    #[derive(Debug, Clone)]
+    struct Point {}
+
+    impl PointTrait for Point {
+        fn x(&self) -> usize { 10 }
+        fn y(&self) -> usize { 20 }
+        fn with_x(&self, _: usize) -> Self { unimplemented!(); }
+        fn with_y(&self, _: usize) -> Self { unimplemented!(); }
+        fn with_x_y(&self, _: usize, _: usize) -> Self { unimplemented!(); }
+    }
+
     #[test]
     fn call_test() {
         let config = CallbackConfiguration {
-            draw_row: |r| format!("{}", r),
-            draw_point: |p| match p {
-                Some(p) => format!("{:?}", p),
+            draw_row: |_, r| format!("{}", r),
+            draw_point: |p: Option<Point>| match p {
+                Some(p) => format!("{}x{}", p.x(), p.y()),
                 None => "None".to_string()
             },
+            _use_t: None,
         };
-        assert_eq!("102", config.draw_row(102));
+
+        let mut row = Row::new();
+        row.insert(102, Point {});
+        assert_eq!("102", config.draw_row(Some(&row), 102));
         assert_eq!("None", config.draw_point(None));
+        assert_eq!("10x20", config.draw_point(Some(Point {})));
     }
 }

@@ -1,19 +1,24 @@
 use std::collections::BTreeMap;
+use std::fmt::Debug;
 
-type Row<I> = BTreeMap<usize, I>;
+pub type Row<I: Debug> = BTreeMap<usize, I>;
 
-pub trait CoordinatesTrait {
+pub trait PointTrait: Clone {
     fn x(&self) -> usize;
     fn y(&self) -> usize;
+
+    fn with_x(&self, new_x: usize) -> Self;
+    fn with_y(&self, new_y: usize) -> Self;
+    fn with_x_y(&self, new_x: usize, new_y: usize) -> Self;
 }
 
 #[derive(Debug, Clone)]
-pub struct Matrix<I: Clone + CoordinatesTrait> {
+pub struct Matrix<I: Clone + PointTrait> {
     len: usize,
-    rows: BTreeMap<usize, Row<I>>,
+    pub  rows: BTreeMap<usize, Row<I>>,
 }
 
-impl<I: Clone + CoordinatesTrait> Matrix<I> {
+impl<I: Clone + PointTrait> Matrix<I> {
     pub fn from_slice(points: &[I]) -> Self {
         let mut rows: BTreeMap<usize, Row<I>> = BTreeMap::new();
         let len = points.len();
@@ -66,6 +71,10 @@ impl<I: Clone + CoordinatesTrait> Matrix<I> {
         } else {
             None
         }
+    }
+
+    pub fn get_row(&self, row: usize) -> Option<&Row<I>> {
+        self.rows.get(&row)
     }
 
     #[allow(unused)]
@@ -169,21 +178,16 @@ mod tests {
 
     impl Point {
         fn new(x: usize, y: usize) -> Self {
-            Point {
-                x,
-                y,
-            }
+            Point { x, y }
         }
     }
 
-    impl CoordinatesTrait for Point {
-        fn x(&self) -> usize {
-            self.x
-        }
-
-        fn y(&self) -> usize {
-            self.y
-        }
+    impl PointTrait for Point {
+        fn x(&self) -> usize { self.x }
+        fn y(&self) -> usize { self.y }
+        fn with_x(&self, _: usize) -> Self { unimplemented!(); }
+        fn with_y(&self, _: usize) -> Self { unimplemented!(); }
+        fn with_x_y(&self, _: usize, _: usize) -> Self { unimplemented!(); }
     }
 
     fn build_test_vec() -> Vec<Point> {

@@ -21,13 +21,7 @@ pub struct RatePrinter<'a> {
 
 impl<'a> RatePrinter<'a> {
     pub fn new(chart: Chart, provider_type: &'a str, fill: &'a str, space: &'a str, history_size: Option<usize>) -> Self {
-        let time_series = rate::RateSeries::new(
-            match history_size {
-                Some(history_size) => history_size,
-                None => 1 * (chart.width() - chart.y_scala_width),
-            }
-        );
-
+        let time_series = build_time_series(&chart, history_size);
         RatePrinter {
             space,
             fill,
@@ -54,17 +48,35 @@ impl<'a> RatePrinter<'a> {
                 Ok(rate)
             }
             Err(e) => {
-                println!("{}", e.to_string());
-                Err(())
+                panic!(e);
+                // println!("{}", e.to_string());
+                // Err(())
             }
         }
     }
 
-    fn print_chart(&self, rate: &rate::Rate, last_rate: &Option<rate::Rate>) {
-        let conf = configuration::CallbackConfiguration {
-            draw_row: |n: usize| util::str_left_pad(&format!("{} |", n), self.chart.y_scala_width - 1, ' ').to_string(),
-            draw_point: |point: Option<Point>| self.draw_callback(&rate, last_rate, point),
+    fn draw_row(&self, row: Option<&matrix::Row<rate::Rate>>, row_number: usize) -> String {
+        let header = match row {
+            Some(row) => {
+                let (_, rate) = row.iter().next().expect(&format!("No items found in row at {}", row_number));
+
+                format!("{} |", rate::Rate::price_to_coordinate(rate.price_usd))
+            }
+            None => "|".to_string(),
         };
+
+        util::str_left_pad(
+            &header,
+            self.chart.y_scala_width,
+            ' ',
+        ).to_string()
+    }
+
+    fn print_chart(&self, rate: &rate::Rate, last_rate: &Option<rate::Rate>) {
+        let conf = configuration::CallbackConfiguration::new(
+            |row: Option<&matrix::Row<rate::Rate>>, row_number: usize| self.draw_row(row, row_number),
+            |point: Option<rate::Rate>| self.draw_callback(&rate, last_rate, point),
+        );
 
         print!(
             "{}",
@@ -98,56 +110,29 @@ impl<'a> RatePrinter<'a> {
         let provider_name = rate_provider::get_name(self.provider_type).unwrap_or("");
         let col_4 = format!("[{}]", provider_name);
 
-        if space_left >= (col_4.chars().count() as isize) {
-            print!("{} {} {} {}", col_1, col_2, col_3, util::str_left_pad(&format!("[{}]", provider_name), space_left as usize, ' '));
+        let footer_complete = if space_left >= (col_4.chars().count() as isize) {
+            format!("{} {} {} {}", col_1, col_2, col_3, util::str_left_pad(&format!("[{}]", provider_name), space_left as usize, ' '))
         } else {
-            print!("{} {} {}", col_1, col_2, col_3);
-        }
+            format!("{} {} {}", col_1, col_2, col_3)
+        };
+
+        print!("{}", color::reverse(&footer_complete));
 
         stdout().flush().unwrap();
     }
 
-//    fn print_header(&self, rate: &rate::Rate, last_rate: &Option<rate::Rate>) {
-    fn print_header(&self, _: &rate::Rate, _: &Option<rate::Rate>) {
-        let matrix = matrix::Matrix::from_slice(&self.time_series.data());
+    fn print_header(&self, rate: &rate::Rate, _: &Option<rate::Rate>) {
+        #[cfg(debug_assertions)]
+            {
+                let matrix = matrix::Matrix::from_slice(&self.time_series.data());
 
-
-//        println!("Span from {:?} to {:?} / {:?} > {:?}", matrix.y_min(), matrix.y_max(), rate, build_point_from_rate(1, rate));
-        println!("Span from {:?} to {:?}", matrix.y_min(), matrix.y_max());
-//        return ();
-//        let now: DateTime<Local> = Local::now();
-//
-//        let col_1 = now.format("%Y-%m-%d %H:%M:%S%.3f").to_string();
-//        let col_2 = trend::get_trend_sign(&rate, last_rate, true);
-//        let col_3 = format!(
-//            "{} ${} / €{}",
-//            util::str_pad(&rate.symbol, 5, ' '),
-//            util::str_pad(&rate.price_usd.to_string(), 10, ' '),
-//            util::str_pad(&rate.price_eur.to_string(), 10, ' ')
-//        );
-//        let col_left_visible_width = col_1.chars().count()
-//            + 1
-//            + trend::get_trend_sign(&rate, last_rate, false).chars().count()
-//            + 1
-//            + col_3.chars().count()
-//            + 1;
-//
-//        let space_left = self.chart.width() as isize - col_left_visible_width as isize;
-//
-//        let provider_name = rate_provider::get_name(self.provider_type).unwrap_or("");
-//        let col_4 = format!("[{}]", provider_name);
-//
-//        if space_left >= (col_4.chars().count() as isize) {
-//            print!("{} {} {} {}", col_1, col_2, col_3, util::str_left_pad(&format!("[{}]", provider_name), space_left as usize, ' '));
-//        } else {
-//            print!("{} {} {}", col_1, col_2, col_3);
-//        }
-//
-//        println!()
-////        stdout().flush().unwrap();
+                println!("{:?}", self.time_series);
+                println!("Span from {:?} to {:?}", matrix.y_min(), matrix.y_max());
+                println!("{:#?}", matrix);
+            }
     }
 
-    fn draw_callback(&self, current_rate: &rate::Rate, last_rate: &Option<rate::Rate>, point: Option<Point>) -> String {
+    fn draw_callback<T: matrix::PointTrait>(&self, current_rate: &rate::Rate, last_rate: &Option<rate::Rate>, point: Option<T>) -> String {
         match point {
             Some(_) => {
                 let trend = trend::get_trend(current_rate, last_rate);
@@ -163,18 +148,36 @@ impl<'a> RatePrinter<'a> {
     }
 }
 
-fn build_points_from_time_series(time_series: &RateSeries) -> Vec<Point> {
-    let mut points: Vec<Point> = vec![];
+
+fn build_points_from_time_series(time_series: &RateSeries) -> Vec<rate::Rate> {
+    let mut points: Vec<rate::Rate> = vec![];
     let mut len = 0;
     for rate in time_series.data() {
-        points.push(build_point_from_rate(len, rate));
+        points.push(matrix::PointTrait::with_x(rate, len));
         len += 1;
     }
 
     points
 }
 
-#[inline]
-fn build_point_from_rate(x: usize, rate: &rate::Rate) -> Point {
-    Point::new(x, rate.price_usd.round() as usize)
+fn build_time_series(chart: &Chart, history_size: Option<usize>) -> RateSeries {
+    let chart_width = chart.width();
+    let prepared_history_size = match history_size {
+        Some(history_size) => {
+            if history_size > 0 {
+                history_size
+            } else {
+                panic!("History size must be bigger than zero")
+            }
+        }
+        None => {
+            if chart_width <= chart.y_scala_width {
+                error!("Chart width must be bigger than {}", chart.y_scala_width)
+            } else {
+                chart_width - chart.y_scala_width
+            }
+        }
+    };
+
+    rate::RateSeries::new(prepared_history_size)
 }

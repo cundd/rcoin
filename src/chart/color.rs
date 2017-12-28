@@ -12,6 +12,12 @@ pub fn color(message: &str, color: u8) -> String {
 
 #[allow(unused)]
 /// Output the text in red
+pub fn reverse(message: &str) -> String {
+    color(message, REVERSE)
+}
+
+#[allow(unused)]
+/// Output the text in red
 pub fn red(message: &str) -> String {
     color(message, RED)
 }

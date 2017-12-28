@@ -1,21 +1,21 @@
-pub use super::point::Point;
-use matrix::Matrix;
+use matrix::*;
 use super::configuration::*;
+use super::padding::Padding;
+
 
 pub struct Canvas {
     width: usize,
     height: usize,
-    x_start: usize,
-    y_start: usize,
+    padding: Padding,
 }
 
 impl Canvas {
-    pub fn new(width: usize, height: usize, x_start: usize, y_start: usize) -> Self {
-        Canvas { width, height, x_start, y_start }
+    pub fn new(width: usize, height: usize, padding: Padding) -> Self {
+        Canvas { width, height, padding }
     }
 
-    pub fn draw_points(&self, matrix: Matrix<Point>) -> String {
-        self.draw_points_with_callback(matrix, |point: Option<Point>| {
+    pub fn draw_points<T: PointTrait>(&self, matrix: Matrix<T>) -> String {
+        self.draw_points_with_callback(matrix, |point: Option<T>| {
             match point {
                 Some(_) => super::BLOCK_FULL.to_string(),
                 None => " ".to_string(),
@@ -23,8 +23,8 @@ impl Canvas {
         })
     }
 
-    pub fn draw_points_with_symbol(&self, matrix: Matrix<Point>, symbol: &str) -> String {
-        self.draw_points_with_callback(matrix, |point: Option<Point>| {
+    pub fn draw_points_with_symbol<T: PointTrait>(&self, matrix: Matrix<T>, symbol: &str) -> String {
+        self.draw_points_with_callback(matrix, |point: Option<T>| {
             match point {
                 Some(_) => symbol.to_string(),
                 None => " ".to_string(),
@@ -32,8 +32,8 @@ impl Canvas {
         })
     }
 
-    pub fn draw_points_with_symbols(&self, matrix: Matrix<Point>, point_symbol: &str, placeholder: &str) -> String {
-        self.draw_points_with_callback(matrix, |point: Option<Point>| {
+    pub fn draw_points_with_symbols<T: PointTrait>(&self, matrix: Matrix<T>, point_symbol: &str, placeholder: &str) -> String {
+        self.draw_points_with_callback(matrix, |point: Option<T>| {
             match point {
                 Some(_) => point_symbol.to_string(),
                 None => placeholder.to_string(),
@@ -41,38 +41,42 @@ impl Canvas {
         })
     }
 
-    pub fn draw_points_with_configuration(&self, matrix: Matrix<Point>, conf: &Configuration) -> String {
+    pub fn draw_points_with_configuration<T: PointTrait>(&self, matrix: Matrix<T>, conf: &Configuration<T>) -> String {
         if matrix.is_empty() {
             return "".to_string();
         }
         let mut buffer = String::with_capacity(self.width * self.height);
+        let y_min = matrix.y_min().unwrap();
 
-        let y_start = self.y_start;
+        let y_start = if y_min < self.padding.bottom { 0 } else { y_min - self.padding.bottom };
+        let y_end = y_start + self.height + self.padding.top;
 
-        for n in (y_start..y_start + self.height).rev() {
-            buffer.push_str(&conf.draw_row(n));
-            buffer.push_str(&self.draw_row_with_configuration(n, &matrix, conf));
+        for row_number in (y_start..y_end).rev() {
+            let row = matrix.get_row(row_number);
+            buffer.push_str(&conf.draw_row(row, row_number));
+            buffer.push_str(&self.draw_row_with_configuration(row_number, &matrix, conf));
             buffer.push_str("\n");
         }
         buffer
     }
 
-    pub fn draw_points_with_callback<F>(&self, matrix: Matrix<Point>, draw_callback: F) -> String
-        where F: Fn(Option<Point>) -> String {
-        let conf = super::configuration::CallbackConfiguration {
-            draw_row: |_: usize| "".to_string(),
-            draw_point: draw_callback,
-        };
+    pub fn draw_points_with_callback<F, T: PointTrait>(&self, matrix: Matrix<T>, draw_callback: F) -> String
+        where F: Fn(Option<T>) -> String {
+        let conf = super::configuration::CallbackConfiguration::new(
+            |_: Option<&Row<T>>, _: usize| "".to_string(),
+            draw_callback,
+        );
         self.draw_points_with_configuration(matrix, &conf)
     }
 
-    fn draw_row_with_configuration(&self, row: usize, matrix: &Matrix<Point>, conf: &Configuration) -> String {
+    fn draw_row_with_configuration<T: PointTrait>(&self, row_number: usize, matrix: &Matrix<T>, conf: &Configuration<T>) -> String {
         let mut buffer = String::with_capacity(self.width);
+        let x_min = matrix.x_min().unwrap();
+        let x_start = if x_min < self.padding.left { 0 } else { x_min - self.padding.bottom };
+        let x_end = x_start + self.width + self.padding.right;
 
-        let x_start = self.x_start;
-
-        for column in x_start..self.width + x_start {
-            buffer.push_str(&conf.draw_point(matrix.get(row, column)));
+        for column in x_start..x_end {
+            buffer.push_str(&conf.draw_point(matrix.get(row_number, column)));
         }
 
         buffer
@@ -82,10 +86,11 @@ impl Canvas {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use super::super::point::Point;
 
     #[test]
     fn draw_points_with_symbol_test() {
-        let canvas = Canvas::new(10, 2, 0, 0);
+        let canvas = Canvas::new(10, 2, Padding::empty());
 
         assert_eq!(
             " .        \n.         \n",
@@ -148,7 +153,7 @@ mod tests {
 
     #[test]
     fn draw_points_with_symbols_test() {
-        let canvas = Canvas::new(10, 2, 0, 0);
+        let canvas = Canvas::new(10, 2, Padding::empty());
 
         assert_eq!(
             " .        \n.         \n",
@@ -214,7 +219,7 @@ mod tests {
 
     #[test]
     fn draw_points_with_callback_test() {
-        let canvas = Canvas::new(10, 2, 0, 0);
+        let canvas = Canvas::new(10, 2, Padding::empty());
 
         assert_eq!(
             "_x________\nx_________\n",

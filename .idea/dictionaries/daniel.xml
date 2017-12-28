@@ -2,6 +2,7 @@
   <dictionary name="daniel">
     <words>
       <w>blockchain</w>
+      <w>serde</w>
     </words>
   </dictionary>
 </component>

@@ -1,5 +1,6 @@
 use super::Rate;
 
+#[derive(Debug)]
 pub struct RateSeries {
     max_len: usize,
     data: Vec<Rate>,
