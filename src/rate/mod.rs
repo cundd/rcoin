@@ -1,22 +1,15 @@
 mod rate_series;
+mod currency;
 
 pub use self::rate_series::RateSeries;
-use rate_provider::Currency;
+pub use self::currency::Currency;
 use matrix::PointTrait;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Rate {
-    //": "bitcoin",
-    pub id: String,
-    //": "Bitcoin",
-    pub name: String,
-    //": "BTC",
-    pub symbol: String,
-    //": "1.0",
+    pub currency: Currency,
     pub price_btc: f32,
-    //": "573.137",
     pub price_usd: f32,
-    // "7278.69583695",
     pub price_eur: f32,
 
     x: usize,
@@ -26,9 +19,7 @@ pub struct Rate {
 impl Rate {
     pub fn new(currency: Currency, price_usd: f32, price_eur: f32) -> Self {
         Rate {
-            id: currency.name().to_owned().to_lowercase(),
-            name: currency.name().to_owned(),
-            symbol: currency.symbol().to_owned(),
+            currency,
             price_btc: 1.0,
             price_usd: price_usd.clone(),
             price_eur: price_eur.clone(),

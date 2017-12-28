@@ -34,11 +34,7 @@ impl RateProvider for CoinMarketCap {
 
         match all.into_iter()
             .find(|rate| {
-                let current_currency = Currency::new(rate.symbol.as_str());
-                if let Some(current_currency) = current_currency {
-                    return current_currency == currency;
-                }
-                false
+                currency == rate.currency
             }) {
             Some(rate) => Ok(rate),
             None => Err(ProviderError::new(format!("No rate for currency {} found", currency.name()))),

@@ -1,6 +1,5 @@
 extern crate curl;
 
-mod currency;
 mod coin_market_cap;
 mod coin_desk;
 mod blockchain_info;
@@ -9,10 +8,10 @@ mod provider_error;
 
 use std::time::SystemTime;
 
-pub use self::currency::Currency;
 use serde_json;
 use self::curl::easy::Easy;
 use rate;
+use rate::Currency;
 use self::provider_error::ProviderError;
 
 

@@ -110,9 +110,9 @@ fn get_provider_type(matches: &ArgMatches) -> String {
     }
 }
 
-fn get_currency(matches: &ArgMatches) -> rate_provider::Currency {
+fn get_currency(matches: &ArgMatches) -> rate::Currency {
     let input = matches.value_of("CURRENCY").unwrap();
-    if let Some(c) = rate_provider::Currency::new(input) {
+    if let Some(c) = rate::Currency::new(input) {
         return c;
     }
 

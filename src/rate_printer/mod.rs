@@ -32,7 +32,7 @@ impl<'a> RatePrinter<'a> {
         }
     }
 
-    pub fn get_and_print_rates(&mut self, currency: rate_provider::Currency) -> Result<rate::Rate, ()> {
+    pub fn get_and_print_rates(&mut self, currency: rate::Currency) -> Result<rate::Rate, ()> {
         self.run_number += 1;
         match rate_provider::get(self.provider_type, currency) {
             Ok(rate) => {
@@ -94,7 +94,7 @@ impl<'a> RatePrinter<'a> {
         let col_2 = trend::get_trend_sign(&rate, last_rate, true);
         let col_3 = format!(
             "{} ${} / €{}",
-            util::str_pad(&rate.symbol, 5, ' '),
+            util::str_pad(&rate.currency.symbol(), 5, ' '),
             util::str_pad(&rate.price_usd.to_string(), 10, ' '),
             util::str_pad(&rate.price_eur.to_string(), 10, ' ')
         );
