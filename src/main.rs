@@ -8,7 +8,7 @@ extern crate chrono;
 
 #[macro_use]
 mod error;
-mod term;
+mod term_style;
 mod rate;
 mod rate_provider;
 mod util;
@@ -197,6 +197,6 @@ fn main() {
         thread::sleep(interval);
     }
 
-    term::show_cursor();
+    term_style::cursor::show_cursor();
 }
 

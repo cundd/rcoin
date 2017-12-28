@@ -1,4 +1,3 @@
-pub mod color;
 pub mod mode;
 pub mod point_drawing;
 pub mod configuration;

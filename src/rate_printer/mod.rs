@@ -5,6 +5,7 @@ use util;
 use rate;
 use rate::RateSeries;
 use chart::*;
+use term_style::style as color;
 use rate_provider;
 use matrix;
 
@@ -48,9 +49,7 @@ impl<'a> RatePrinter<'a> {
                 Ok(rate)
             }
             Err(e) => {
-                panic!(e);
-                // println!("{}", e.to_string());
-                // Err(())
+                error!("{}", e.to_string())
             }
         }
     }
@@ -121,7 +120,7 @@ impl<'a> RatePrinter<'a> {
         stdout().flush().unwrap();
     }
 
-    fn print_header(&self, rate: &rate::Rate, _: &Option<rate::Rate>) {
+    fn print_header(&self, _: &rate::Rate, _: &Option<rate::Rate>) {
         #[cfg(debug_assertions)]
             {
                 let matrix = matrix::Matrix::from_slice(&self.time_series.data());

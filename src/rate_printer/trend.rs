@@ -1,6 +1,6 @@
 use rate;
 use rate::RateSeries;
-use chart::color;
+use term_style::style as color;
 
 #[allow(unused)]
 pub fn get_trend_from_time_series(current_rate: &rate::Rate, time_series: &RateSeries) -> i8 {
