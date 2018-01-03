@@ -2,7 +2,6 @@ pub mod mode;
 pub mod point_drawing;
 pub mod configuration;
 pub mod padding;
-mod point;
 mod canvas;
 mod transform;
 
@@ -165,7 +164,7 @@ impl Chart {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use super::point::Point;
+    use point::Point;
 
     #[test]
     fn draw_points_with_symbol_test() {

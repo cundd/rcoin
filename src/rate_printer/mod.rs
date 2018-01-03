@@ -1,5 +1,4 @@
-use std::io::Write;
-use std::io::stdout;
+use std::fmt::Debug;
 use chrono::prelude::*;
 use util;
 use rate;
@@ -8,20 +7,24 @@ use chart::*;
 use term_style::style as color;
 use rate_provider;
 use matrix;
+use ui::Screen;
+use ui::medium::MediumTrait;
+use point::Point;
 
 mod trend;
 
-pub struct RatePrinter<'a> {
+pub struct RatePrinter<'a, T:MediumTrait + Debug>  {
     fill: &'a str,
     space: &'a str,
     provider_type: &'a str,
     time_series: rate::RateSeries,
     chart: Chart,
     run_number: usize,
+    screen: Screen<T>,
 }
 
-impl<'a> RatePrinter<'a> {
-    pub fn new(chart: Chart, provider_type: &'a str, fill: &'a str, space: &'a str, history_size: Option<usize>) -> Self {
+impl<'a,T:MediumTrait + Debug> RatePrinter<'a,T> {
+    pub fn new(screen: Screen<T>, chart: Chart, provider_type: &'a str, fill: &'a str, space: &'a str, history_size: Option<usize>) -> Self {
         let time_series = build_time_series(&chart, history_size);
         RatePrinter {
             space,
@@ -29,6 +32,7 @@ impl<'a> RatePrinter<'a> {
             provider_type,
             chart,
             time_series,
+            screen,
             run_number: 0,
         }
     }
@@ -40,11 +44,20 @@ impl<'a> RatePrinter<'a> {
                 let last_rate = self.time_series.last().cloned();
                 self.time_series.push(rate.clone());
 
-                println!();
-                print!("{}[2J", 27 as char); // Clear the screen
-                self.print_header(&rate, &last_rate);
-                self.print_chart(&rate, &last_rate);
-                self.print_footer(&rate, &last_rate);
+                let output = format!(
+                    "{}{}{}",
+                    self.get_header(&rate, &last_rate),
+                    self.get_chart(&rate, &last_rate),
+                    self.get_footer(&rate, &last_rate),
+                );
+
+                if let Err(e) = self.screen.draw_text_wrapping(&Point::new(0, 0), &output) {
+                    error!("{}", e.to_string())
+                }
+
+                if let Err(e) = self.screen.flush() {
+                    error!("{}", e.to_string())
+                }
 
                 Ok(rate)
             }
@@ -71,22 +84,19 @@ impl<'a> RatePrinter<'a> {
         ).to_string()
     }
 
-    fn print_chart(&self, rate: &rate::Rate, last_rate: &Option<rate::Rate>) {
+    fn get_chart(&self, rate: &rate::Rate, last_rate: &Option<rate::Rate>) -> String {
         let conf = configuration::CallbackConfiguration::new(
             |row: Option<&matrix::Row<rate::Rate>>, row_number: usize| self.draw_row(row, row_number),
             |point: Option<rate::Rate>| self.draw_callback(&rate, last_rate, point),
         );
 
-        print!(
-            "{}",
-            self.chart.draw_points_with_configuration(
-                build_points_from_time_series(&self.time_series),
-                &conf,
-            )
-        );
+        self.chart.draw_points_with_configuration(
+            build_points_from_time_series(&self.time_series),
+            &conf,
+        )
     }
 
-    fn print_footer(&self, rate: &rate::Rate, last_rate: &Option<rate::Rate>) {
+    fn get_footer(&self, rate: &rate::Rate, last_rate: &Option<rate::Rate>) -> String {
         let now: DateTime<Local> = Local::now();
 
         let col_1 = now.format("%Y-%m-%d %H:%M:%S%.3f").to_string();
@@ -115,12 +125,10 @@ impl<'a> RatePrinter<'a> {
             format!("{} {} {}", col_1, col_2, col_3)
         };
 
-        print!("{}", color::reverse(&footer_complete));
-
-        stdout().flush().unwrap();
+        color::reverse(&footer_complete)
     }
 
-    fn print_header(&self, _: &rate::Rate, _: &Option<rate::Rate>) {
+    fn get_header(&self, _: &rate::Rate, _: &Option<rate::Rate>) -> String {
         #[cfg(debug_assertions)]
             {
                 let matrix = matrix::Matrix::from_slice(&self.time_series.data());
@@ -128,10 +136,13 @@ impl<'a> RatePrinter<'a> {
                 println!("{:?}", self.time_series);
                 println!("Span from {:?} to {:?}", matrix.y_min(), matrix.y_max());
                 println!("{:#?}", matrix);
+                print!("{}[2J", 27 as char); // Clear the screen
             }
+
+        "".to_string()
     }
 
-    fn draw_callback<T: matrix::PointTrait>(&self, current_rate: &rate::Rate, last_rate: &Option<rate::Rate>, point: Option<T>) -> String {
+    fn draw_callback<P: matrix::PointTrait>(&self, current_rate: &rate::Rate, last_rate: &Option<rate::Rate>, point: Option<P>) -> String {
         match point {
             Some(_) => {
                 let trend = trend::get_trend(current_rate, last_rate);

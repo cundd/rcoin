@@ -15,10 +15,12 @@ mod util;
 mod chart;
 mod matrix;
 mod rate_printer;
+mod ui;
+mod point;
 
 use std::{thread, time};
 use clap::{App, Arg, ArgMatches};
-
+use ui::Screen;
 
 fn get_mode(matches: &ArgMatches) -> chart::Mode {
     match matches.value_of("mode") {
@@ -182,12 +184,13 @@ fn main() {
     let chart = chart::Chart::new(
         get_chart_width(&matches),
         get_chart_height(&matches),
-        1,
+        2,//1,
         7,
         get_mode(&matches),
     );
 
-    let mut printer = rate_printer::RatePrinter::new(chart, &provider_type, &fill, &space, get_history_size(&matches));
+    let screen = Screen::default().unwrap();
+    let mut printer = rate_printer::RatePrinter::new(screen, chart, &provider_type, &fill, &space, get_history_size(&matches));
     loop {
         if printer.get_and_print_rates(currency).is_err() {
             break;

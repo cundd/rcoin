@@ -55,7 +55,7 @@ impl Canvas {
             let row = matrix.get_row(row_number);
             buffer.push_str(&conf.draw_row(row, row_number));
             buffer.push_str(&self.draw_row_with_configuration(row_number, &matrix, conf));
-            buffer.push_str("\n");
+            buffer.push('\n');
         }
         buffer
     }
@@ -86,7 +86,7 @@ impl Canvas {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use super::super::point::Point;
+    use point::Point;
 
     #[test]
     fn draw_points_with_symbol_test() {

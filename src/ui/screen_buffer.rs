@@ -1,18 +1,22 @@
+use point::Point;
 use matrix::PointTrait;
 use super::size::Size;
+use super::pixel::Pixel;
+use super::pixel::CoordinatePrecision;
 use super::error::*;
 
 #[derive(Debug)]
 pub struct ScreenBuffer {
     size: Size,
-    buffer: Vec<char>,
+    buffer: Vec<Pixel>,
 }
 
+#[allow(unused)]
 impl ScreenBuffer {
     pub fn with_size(size: Size) -> Result<ScreenBuffer, Error> {
         Self::check_size(&size)?;
 
-        let buffer = vec![' '; size.width * size.height];
+        let buffer = Vec::with_capacity(size.width * size.height);
 
         Ok(ScreenBuffer { size, buffer })
     }
@@ -25,62 +29,140 @@ impl ScreenBuffer {
         self.size.height
     }
 
-    pub fn draw_point<T: PointTrait>(&mut self, point: &T, content: char) -> Result<(), Error> {
-        let index = match self.get_index_for_point(point) {
+    pub fn draw_pixel(&mut self, pixel: Pixel) -> Result<(), Error> {
+        let index = match self.get_index_for_point(&pixel) {
             Ok(i) => i,
-            Err(e) => return Err(ui_error!(SizeError,"{} for character '{}'", e.to_string(), content))
+            Err(e) => return Err(ui_error!(SizeError,"{} for character '{}'", e.to_string(), pixel.character))
         };
-
-        self.buffer[index] = content;
+        if self.buffer.len() <= index {
+            self.fill_buffer_up_to(index);
+            self.buffer.push(pixel);
+        } else {
+            self.buffer[index] = pixel;
+        }
 
         Ok(())
     }
 
-    pub fn get_content_at_point<T: PointTrait>(&self, point: &T) -> Result<char, Error> {
-        let index = self.get_index_for_point(point)?;
-
-        unsafe {
-            Ok(*self.buffer.get_unchecked(index))
+    pub fn draw_point<T: PointTrait>(&mut self, point: &T, content: char) -> Result<(), Error> {
+        if point.x() > CoordinatePrecision::max_value() as usize {
+            return Err(ui_error!(SizeError,"The point's `x` coordinate ({}) exceeds the maximum Pixel `x` ({}) for character '{}'", point.x(), CoordinatePrecision::max_value(), content));
+        }
+        if point.y() > CoordinatePrecision::max_value() as usize {
+            return Err(ui_error!(SizeError,"The point's `y` coordinate ({}) exceeds the maximum Pixel `y` ({}) for character '{}'", point.y(), CoordinatePrecision::max_value(), content));
         }
 
-//        match self.buffer.get(index) {
-//            Some(c) => Ok(*c),
-//            None => Ok(' '),
-//        }
+        let x = point.x() as CoordinatePrecision;
+        let y = point.y() as CoordinatePrecision;
+
+        self.draw_pixel(Pixel::normal(content, x, y))
+    }
+
+    pub fn get_pixel_at_point<T: PointTrait>(&self, point: &T) -> Result<Pixel, Error> {
+        let index = self.get_index_for_point(point)?;
+        match self.get_pixel_at_index(index) {
+            Some(c) => Ok(Pixel::new(c.character, c.x, c.y, c.style)),
+            None => Ok(Pixel::blank_with_point(point)),
+        }
+    }
+
+    pub fn get_content_at_point<T: PointTrait>(&self, point: &T) -> Result<char, Error> {
+        let pixel = self.get_pixel_at_point(point)?;
+
+        Ok(pixel.character)
+    }
+
+    pub fn get_content_at(&self, x: CoordinatePrecision, y: CoordinatePrecision) -> Result<char, Error> {
+        let pixel = self.get_pixel_at(x, y)?;
+
+        Ok(pixel.character)
+    }
+    pub fn get_pixel_at(&self, x: CoordinatePrecision, y: CoordinatePrecision) -> Result<Pixel, Error> {
+        let pixel = self.get_pixel_at_point(&Point::new(x as usize, y as usize))?;
+
+        Ok(pixel)
     }
 
     /// @TODO: Make Cow
     pub fn get_contents(&self) -> String {
         let width = self.size.width;
         let height = self.size.height;
-        let mut row = 0;
+        let mut y = 0;
         let mut output = String::with_capacity(width * height + height);
 
-        while row < height {
-            let start_index = row * width;
-            let end_index = start_index + width;
-            let mut index = start_index;
-            while index < end_index {
-                output.push(*self.buffer.get(index).expect(&format!("Index {} for row {} is out of range", index, row)));
-                index += 1;
+        'row_loop: while y < height {
+            let mut current_index = y * width;
+            let mut x = 0;
+            'column_loop: while x < width {
+                let pixel = self.get_pixel_at_point(&Point::new(x as usize, y))
+                    .expect(&format!("No Pixel found for {}x{}", x, y));
+
+                let character = match pixel.character {
+                    '\u{1b}' => panic!("Newline in user input detected"),
+                    '\n' => panic!("Newline in user input detected"),
+
+                    character @ _ if character.is_control() => Some('x'),
+                    character @ _ => Some(character),
+                };
+
+                if let Some(character) = character {
+                    output.push(character);
+                }
+
+                current_index += 1;
+                x += 1;
             }
             output.push('\n');
-            row += 1;
+            y += 1;
         }
 
         output
+    }
+
+    #[inline]
+    fn get_pixel_at_index(&self, index: usize) -> Option<&Pixel> {
+        self.buffer.get(index)
+    }
+
+    /// Return the index of the last Point in the buffer
+    fn last_index(&self) -> Option<usize> {
+        match self.buffer.last() {
+            Some(pixel) => match self.get_index_for_point(pixel) {
+                Ok(index) => Some(index),
+                Err(_) => None,
+            },
+            None => None,
+        }
+    }
+
+    /// Returns the index of the last possible Point
+    fn max_index(&self) -> usize {
+        self.size.width * self.size.height
     }
 
     fn check_size(size: &Size) -> Result<(), Error> {
         if size.width == 0 || size.height == 0 {
             return Err(ui_error!(SizeError, "The screen size {}x{} is too small", size.width, size.height));
         }
+        // Number of available pixels
         if let Some(pixel_count) = size.width.checked_mul(size.height) {
+            // Add a \n for each row
             if let Some(_) = pixel_count.checked_add(size.height) {
                 return Ok(());
             }
         }
         Err(ui_error!(SizeError, "The screen size {}x{} is too big", size.width, size.height))
+    }
+
+    fn fill_buffer_up_to(&mut self, end: usize) {
+        let mut index = self.buffer.len();
+        while index < end {
+            let y: CoordinatePrecision = f64::floor(index as f64 / self.size.width as f64) as CoordinatePrecision;
+            let x = (index - y as usize * self.size.width) as CoordinatePrecision;
+            self.buffer.push(Pixel::placeholder(x, y));
+
+            index += 1;
+        }
     }
 
     fn check_point_bounds<T: PointTrait>(&self, point: &T) -> Result<(), Error> {
@@ -99,77 +181,41 @@ impl ScreenBuffer {
 
         Ok(point.y() * self.size.width + point.x())
     }
-
-//    fn is_ascii_control(c: char) -> bool {
-//        (c as u32 <= 0x7f) && Self::is_ascii_control_u8(c as u8)
-//    }
-//
-//    #[inline]
-//    fn is_ascii_control_u8(c: u8) -> bool {
-//        if c >= 0x80 { return false; }
-//        match ASCII_CHARACTER_CLASS[c as usize] {
-//            C | Cw => true,
-//            _ => false
-//        }
-//    }
 }
-//
-//enum AsciiCharacterClass {
-//    C,
-//    // control
-//    Cw,
-//    // control whitespace
-//    W,
-//    // whitespace
-//    D,
-//    // digit
-//    L,
-//    // lowercase
-//    Lx,
-//    // lowercase hex digit
-//    U,
-//    // uppercase
-//    Ux,
-//    // uppercase hex digit
-//    P,  // punctuation
-//}
-//
-//use self::AsciiCharacterClass::*;
-//
-//static ASCII_CHARACTER_CLASS: [AsciiCharacterClass; 128] = [
-////  _0 _1 _2 _3 _4 _5 _6 _7 _8 _9 _a _b _c _d _e _f
-//    C, C, C, C, C, C, C, C, C, Cw, Cw, C, Cw, Cw, C, C, // 0_
-//    C, C, C, C, C, C, C, C, C, C, C, C, C, C, C, C, // 1_
-//    W, P, P, P, P, P, P, P, P, P, P, P, P, P, P, P, // 2_
-//    D, D, D, D, D, D, D, D, D, D, P, P, P, P, P, P, // 3_
-//    P, Ux, Ux, Ux, Ux, Ux, Ux, U, U, U, U, U, U, U, U, U, // 4_
-//    U, U, U, U, U, U, U, U, U, U, U, P, P, P, P, P, // 5_
-//    P, Lx, Lx, Lx, Lx, Lx, Lx, L, L, L, L, L, L, L, L, L, // 6_
-//    L, L, L, L, L, L, L, L, L, L, L, P, P, P, P, C, // 7_
-//];
 
 #[cfg(test)]
 mod tests {
-    use matrix::PointTrait;
     use super::*;
     use point::Point;
 
     #[test]
     fn draw_point_should_fail_test() {
         assert_eq!(
-            Err(Error::SizeError("The point's `x` coordinate (2000000) is bigger than the screen's width (1) for character ' '".to_string())),
+            Err(Error::SizeError("The point's `x` coordinate (20000) is bigger than the screen's width (1) for character ' '".to_string())),
             ScreenBuffer::with_size(Size::new(1, 10)).unwrap()
-                .draw_point(&Point::new(2_000_000, 0), ' ')
+                .draw_point(&Point::new(20_000, 0), ' ')
         );
         assert_eq!(
-            Err(Error::SizeError("The point's `y` coordinate (3000000) is bigger than the screen's height (1) for character ' '".to_string())),
+            Err(Error::SizeError("The point's `y` coordinate (30000) is bigger than the screen's height (1) for character ' '".to_string())),
             ScreenBuffer::with_size(Size::new(10, 1)).unwrap()
-                .draw_point(&Point::new(0, 3_000_000), ' ')
+                .draw_point(&Point::new(0, 30_000), ' ')
         );
         assert_eq!(
             Err(Error::SizeError("The point's `x` coordinate (10) is bigger than the screen's width (10) for character ' '".to_string())),
             ScreenBuffer::with_size(Size::new(10, 10)).unwrap()
                 .draw_point(&Point::new(10, 10), ' ')
+        );
+
+        // CoordinatePrecision overflow
+        assert_eq!(
+            Err(Error::SizeError("The point's `x` coordinate (2000000) exceeds the maximum Pixel `x` (65535) for character ' '".to_string())),
+            ScreenBuffer::with_size(Size::new(1, 10)).unwrap()
+                .draw_point(&Point::new(2_000_000, 0), ' ')
+        );
+        assert_eq!(
+            Err(Error::SizeError("The point's `y` coordinate (3000000) exceeds the maximum Pixel `y` (65535) for character ' '".to_string())),
+            ScreenBuffer::with_size(Size::new(10, 1)).unwrap()
+                .draw_point(&Point::new(0, 3_000_000), ' ')
         );
     }
 
@@ -178,16 +224,16 @@ mod tests {
         let mut buffer = ScreenBuffer::with_size(Size::new(3_200, 1_024)).unwrap();
         let point = Point::new(100, 200);
 
-        let buffer_size_before_draw = buffer.buffer.len();
+//        let buffer_size_before_draw = buffer.buffer.len();
         assert!(buffer.draw_point(&point, 'x').is_ok());
         assert_eq!('x', buffer.get_content_at_point(&point).expect(&format!("Failed to fetch content at {}", point)));
 
-        assert_eq!(buffer_size_before_draw, buffer.buffer.len());
+//        assert_eq!(buffer_size_before_draw, buffer.buffer.len());
+        assert_eq!(100 + 200 * 3_200 + 1, buffer.buffer.len());
     }
 
-    #[test]
+//    #[test]
 //    fn draw_point_with_control_character() {
-//        // is_control
 //        let mut buffer = ScreenBuffer::with_size(Size::new(10, 20)).unwrap();
 //
 //        println!(" \u{1b}[");
