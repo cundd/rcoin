@@ -1,6 +1,12 @@
 pub fn _error(message: &str) -> ! {
-    eprintln!("{}", message);
-    ::std::process::exit(1);
+    #[cfg(debug_assertions)]
+        panic!("{}", message);
+
+    #[cfg(not(debug_assertions))]
+        {
+            eprintln!("{}", message);
+            ::std::process::exit(1);
+        }
 }
 
 macro_rules! error {
