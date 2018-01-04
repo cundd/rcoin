@@ -9,24 +9,32 @@ use super::error::*;
 pub struct ScreenBuffer {
     size: Size,
     buffer: Vec<Pixel>,
+    blank_pixel: Pixel,
 }
 
 #[allow(unused)]
 impl ScreenBuffer {
-    pub fn with_size(size: Size) -> Result<ScreenBuffer, Error> {
+    pub fn new(size: Size, blank_pixel: Pixel) -> Result<Self, Error> {
         Self::check_size(&size)?;
 
-        let buffer = Vec::with_capacity(size.width * size.height);
-
-        Ok(ScreenBuffer { size, buffer })
+        let buffer = Vec::with_capacity(size.width as usize * size.height as usize);
+        Ok(ScreenBuffer { size, buffer, blank_pixel })
     }
 
-    pub fn width(&self) -> usize {
+    pub fn with_size(size: Size) -> Result<Self, Error> {
+        Self::new(size, Pixel::placeholder(0, 0))
+    }
+
+    pub fn width(&self) -> CoordinatePrecision {
         self.size.width
     }
 
-    pub fn height(&self) -> usize {
+    pub fn height(&self) -> CoordinatePrecision {
         self.size.height
+    }
+
+    pub fn clear(&mut self) {
+        self.buffer.clear();
     }
 
     pub fn draw_pixel(&mut self, pixel: Pixel) -> Result<(), Error> {
@@ -38,17 +46,17 @@ impl ScreenBuffer {
             self.fill_buffer_up_to(index);
             self.buffer.push(pixel);
         } else {
-            self.buffer[index] = pixel;
+            self.buffer[index as usize] = pixel;
         }
 
         Ok(())
     }
 
     pub fn draw_point<T: PointTrait>(&mut self, point: &T, content: char) -> Result<(), Error> {
-        if point.x() > CoordinatePrecision::max_value() as usize {
+        if point.x() as usize > CoordinatePrecision::max_value() as usize {
             return Err(ui_error!(SizeError,"The point's `x` coordinate ({}) exceeds the maximum Pixel `x` ({}) for character '{}'", point.x(), CoordinatePrecision::max_value(), content));
         }
-        if point.y() > CoordinatePrecision::max_value() as usize {
+        if point.y() as usize > CoordinatePrecision::max_value() as usize {
             return Err(ui_error!(SizeError,"The point's `y` coordinate ({}) exceeds the maximum Pixel `y` ({}) for character '{}'", point.y(), CoordinatePrecision::max_value(), content));
         }
 
@@ -62,7 +70,7 @@ impl ScreenBuffer {
         let index = self.get_index_for_point(point)?;
         match self.get_pixel_at_index(index) {
             Some(c) => Ok(Pixel::new(c.character, c.x, c.y, c.style)),
-            None => Ok(Pixel::blank_with_point(point)),
+            None => Ok(self.blank_pixel.clone()),
         }
     }
 
@@ -78,23 +86,22 @@ impl ScreenBuffer {
         Ok(pixel.character)
     }
     pub fn get_pixel_at(&self, x: CoordinatePrecision, y: CoordinatePrecision) -> Result<Pixel, Error> {
-        let pixel = self.get_pixel_at_point(&Point::new(x as usize, y as usize))?;
+        let pixel = self.get_pixel_at_point(&Point::new(x, y))?;
 
         Ok(pixel)
     }
 
-    /// @TODO: Make Cow
     pub fn get_contents(&self) -> String {
         let width = self.size.width;
         let height = self.size.height;
         let mut y = 0;
-        let mut output = String::with_capacity(width * height + height);
+        let mut output = String::with_capacity(width as usize * height as usize + height as usize);
 
         'row_loop: while y < height {
             let mut current_index = y * width;
             let mut x = 0;
             'column_loop: while x < width {
-                let pixel = self.get_pixel_at_point(&Point::new(x as usize, y))
+                let pixel = self.get_pixel_at_point(&Point::new(x, y))
                     .expect(&format!("No Pixel found for {}x{}", x, y));
 
                 let character = match pixel.character {
@@ -137,17 +144,21 @@ impl ScreenBuffer {
 
     /// Returns the index of the last possible Point
     fn max_index(&self) -> usize {
-        self.size.width * self.size.height
+        (self.size.width * self.size.height) as usize
     }
 
     fn check_size(size: &Size) -> Result<(), Error> {
         if size.width == 0 || size.height == 0 {
             return Err(ui_error!(SizeError, "The screen size {}x{} is too small", size.width, size.height));
         }
+
+        let width: usize = size.width as usize;
+        let height: usize = size.height as usize;
+
         // Number of available pixels
-        if let Some(pixel_count) = size.width.checked_mul(size.height) {
+        if let Some(pixel_count) = width.checked_mul(height) {
             // Add a \n for each row
-            if let Some(_) = pixel_count.checked_add(size.height) {
+            if let Some(_) = pixel_count.checked_add(height) {
                 return Ok(());
             }
         }
@@ -158,7 +169,13 @@ impl ScreenBuffer {
         let mut index = self.buffer.len();
         while index < end {
             let y: CoordinatePrecision = f64::floor(index as f64 / self.size.width as f64) as CoordinatePrecision;
-            let x = (index - y as usize * self.size.width) as CoordinatePrecision;
+            let x_raw: usize = index - y as usize * self.size.width as usize;
+            if x_raw >= CoordinatePrecision::max_value() as usize {
+                panic!("Raw x value exceeds maximum Coordinate Precision");
+            }
+
+            let x = x_raw as CoordinatePrecision;
+
             self.buffer.push(Pixel::placeholder(x, y));
 
             index += 1;
@@ -179,7 +196,11 @@ impl ScreenBuffer {
     fn get_index_for_point<T: PointTrait>(&self, point: &T) -> Result<usize, Error> {
         self.check_point_bounds(point)?;
 
-        Ok(point.y() * self.size.width + point.x())
+        Ok(
+            point.y() as usize
+                * self.size.width as usize
+                + point.x() as usize
+        )
     }
 }
 
@@ -206,17 +227,17 @@ mod tests {
                 .draw_point(&Point::new(10, 10), ' ')
         );
 
-        // CoordinatePrecision overflow
-        assert_eq!(
-            Err(Error::SizeError("The point's `x` coordinate (2000000) exceeds the maximum Pixel `x` (65535) for character ' '".to_string())),
-            ScreenBuffer::with_size(Size::new(1, 10)).unwrap()
-                .draw_point(&Point::new(2_000_000, 0), ' ')
-        );
-        assert_eq!(
-            Err(Error::SizeError("The point's `y` coordinate (3000000) exceeds the maximum Pixel `y` (65535) for character ' '".to_string())),
-            ScreenBuffer::with_size(Size::new(10, 1)).unwrap()
-                .draw_point(&Point::new(0, 3_000_000), ' ')
-        );
+//        // CoordinatePrecision overflow
+//        assert_eq!(
+//            Err(Error::SizeError("The point's `x` coordinate (2000000) exceeds the maximum Pixel `x` (65535) for character ' '".to_string())),
+//            ScreenBuffer::with_size(Size::new(1, 10)).unwrap()
+//                .draw_point(&Point::new(2_000_000, 0), ' ')
+//        );
+//        assert_eq!(
+//            Err(Error::SizeError("The point's `y` coordinate (3000000) exceeds the maximum Pixel `y` (65535) for character ' '".to_string())),
+//            ScreenBuffer::with_size(Size::new(10, 1)).unwrap()
+//                .draw_point(&Point::new(0, 3_000_000), ' ')
+//        );
     }
 
     #[test]

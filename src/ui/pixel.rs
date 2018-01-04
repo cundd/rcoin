@@ -20,9 +20,6 @@ impl Pixel {
     }
 
     pub fn with_point<T: PointTrait>(character: char, point: &T) -> Self {
-        Self::check_coordinate_precision(point.x());
-        Self::check_coordinate_precision(point.y());
-
         let x = point.x() as CoordinatePrecision;
         let y = point.x() as CoordinatePrecision;
 
@@ -37,14 +34,15 @@ impl Pixel {
         Pixel { x, y, character: ' ', style: Style::Normal, placeholder: true }
     }
 
+    pub fn placeholder_with_character(x: CoordinatePrecision, y: CoordinatePrecision, character: char) -> Self {
+        Pixel { x, y, character, style: Style::Normal, placeholder: true }
+    }
+
     pub fn blank(x: CoordinatePrecision, y: CoordinatePrecision) -> Self {
         Pixel { x, y, character: ' ', style: Style::Normal, placeholder: true }
     }
 
     pub fn blank_with_point<T: PointTrait>(point: &T) -> Self {
-        Self::check_coordinate_precision(point.x());
-        Self::check_coordinate_precision(point.y());
-
         Self::blank(point.x() as CoordinatePrecision, point.y() as CoordinatePrecision)
     }
 
@@ -56,39 +54,32 @@ impl Pixel {
 }
 
 impl PointTrait for Pixel {
-    fn x(&self) -> usize {
-        self.x as usize
+    fn x(&self) -> CoordinatePrecision {
+        self.x as CoordinatePrecision
     }
 
-    fn y(&self) -> usize {
-        self.y as usize
+    fn y(&self) -> CoordinatePrecision {
+        self.y as CoordinatePrecision
     }
 
-    fn with_x(&self, new_x: usize) -> Self {
-        Self::check_coordinate_precision(new_x);
-
+    fn with_x(&self, new_x: CoordinatePrecision) -> Self {
         let mut clone = self.clone();
         clone.x = new_x as CoordinatePrecision;
 
         clone
     }
 
-    fn with_y(&self, new_y: usize) -> Self {
-        Self::check_coordinate_precision(new_y);
-
+    fn with_y(&self, new_y: CoordinatePrecision) -> Self {
         let mut clone = self.clone();
         clone.y = new_y as CoordinatePrecision;
 
         clone
     }
 
-    fn with_x_y(&self, new_x: usize, new_y: usize) -> Self {
-        Self::check_coordinate_precision(new_x);
-        Self::check_coordinate_precision(new_y);
-
+    fn with_x_y(&self, new_x: CoordinatePrecision, new_y: CoordinatePrecision) -> Self {
         let mut clone = self.clone();
-        clone.x = new_x as CoordinatePrecision;
-        clone.y = new_y as CoordinatePrecision;
+        clone.x = new_x ;
+        clone.y = new_y;
 
         clone
     }

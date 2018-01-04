@@ -3,16 +3,20 @@ use std::fmt;
 use std::fmt::Debug;
 use matrix::PointTrait;
 use super::screen_buffer::ScreenBuffer;
+use super::pixel::CoordinatePrecision;
+use super::pixel::Pixel;
 use super::medium;
 use super::medium::MediumTrait;
 use super::size::Size;
 use super::error::Error;
 
+pub const DEFAULT_WIDTH: CoordinatePrecision = 30;
+pub const DEFAULT_HEIGHT: CoordinatePrecision = 10;
 
 fn get_screen_size() -> Option<Size> {
     match term_size::dimensions() {
-        Some((width, height)) => Some(Size::new(width, height)),
-        None => Some(Size::new(10, 10)),
+        Some((width, height)) => Some(Size::new(width as CoordinatePrecision, height as CoordinatePrecision)),
+        None => Some(Size::new(DEFAULT_WIDTH, DEFAULT_HEIGHT)),
     }
 }
 
@@ -22,23 +26,45 @@ pub struct Screen<T: MediumTrait + Debug> {
     medium: T,
 }
 
+fn debug_multi_line(text: &str, until: usize) {
+    let mut index = 0;
+    while let Some(character) = text.chars().nth(index) {
+        print!("{}", character);
+
+        index += 1;
+
+        if index > until {
+            break;
+        }
+    }
+}
 
 #[allow(unused)]
 impl<T: MediumTrait + Debug> Screen<T> {
-    pub fn new(size: Size, medium: T) -> Result<Self, Error> {
-        let buffer = ScreenBuffer::with_size(size)?;
+    pub fn new(size: Size, fill_pixel: Pixel, medium: T) -> Result<Self, Error> {
+        let buffer = ScreenBuffer::new(size, fill_pixel)?;
         Ok(Screen { buffer, medium })
     }
 
+    /// Insert the text at the given point
+    ///
+    /// An error will be returned if the text contains a newline ('\n'), one of the text's
+    /// characters does not fit into one row of the underlying buffer
+    ///
+    /// Keep in mind, that these operations are not transactional. If an error occurs with the nth
+    /// character, the previous characters are still stored
     pub fn draw_text<P: PointTrait + Debug>(&mut self, point: &P, text: &str) -> Result<(), Error> {
+        if let Some(_) = text.find('\n') {
+            return Err(ui_error!(InputTextError, "Newline character must not appear in `draw_text()`"));
+        }
+
         let mut current_x = point.x();
         let mut index = 0;
+        let mut chars: Vec<char> = text.chars().collect();
 
-        while let Some(character) = text.chars().nth(index) {
-            match character {
-                '\n' => {
-                    return Err(ui_error!(InputTextError, "Newline character must not appear in `draw_text()`"));
-                }
+        while let Some(character) = chars.get(index) {
+            match *character {
+                '\n' => {}
                 character @ _ if character.is_control() => {
                     index += Self::consume_control_sequence(text, index)
                 }
@@ -54,19 +80,36 @@ impl<T: MediumTrait + Debug> Screen<T> {
         Ok(())
     }
 
+    /// Insert the text at the given point with support for multi-line text
+    ///
+    /// An error will be returned if one the text's characters does not fit into the underlying buffer
+    ///
+    /// Keep in mind, that these operations are not transactional. If an error occurs with the nth
+    /// character, the previous characters are still stored
     pub fn draw_text_wrapping<P: PointTrait + Debug>(&mut self, point: &P, text: &str) -> Result<(), Error> {
+        let lines_count = text.matches('\n').count();
+        if lines_count > self.buffer.height() as usize {
+            return Err(ui_error!(SizeError, "Buffer height is {} but the input text contains {} lines", self.buffer.height(), lines_count));
+        }
+
         let mut current_x = point.x();
         let mut current_y = point.y();
         let mut index = 0;
+        let mut chars: Vec<char> = text.chars().collect();
 
-        while let Some(character) = text.chars().nth(index) {
+        while let Some(character) = chars.get(index) {
             // If the maximum x for this line is reached, set the coordinates to a new row
             if current_x >= self.buffer.width() {
                 current_y += 1;
                 current_x = 0;
+
+                if *character == '\n' {
+                    index += 1;
+                    continue;
+                }
             }
 
-            match character {
+            match *character {
                 '\n' => {
                     current_y += 1;
                     current_x = 0;
@@ -76,13 +119,12 @@ impl<T: MediumTrait + Debug> Screen<T> {
                 }
                 character @ _ if character.is_control() => index += Self::consume_control_sequence(text, index),
                 character @ _ => {
-                    self.buffer.draw_point(&point.with_x_y(current_x, current_y), character)?;
+                    if let Err(e) = self.buffer.draw_point(&point.with_x_y(current_x, current_y), character) {
+                        debug_multi_line(text, index);
+                        return Err(e);
+                    }
                     current_x += 1;
                 }
-            }
-
-            if index > 10_000 {
-                panic!("Stop at run {} with character `{}`", index, character);
             }
 
             index += 1;
@@ -116,11 +158,15 @@ impl<T: MediumTrait + Debug> Screen<T> {
 #[allow(unused)]
 impl Screen<medium::Terminal> {
     pub fn default() -> Result<Self, Error> {
-        Self::new(get_screen_size().unwrap(), medium::default())
+        Self::new(get_screen_size().unwrap(), Pixel::placeholder(0, 0), medium::default())
     }
 
     pub fn with_size(size: Size) -> Result<Self, Error> {
-        Self::new(size, medium::default())
+        Self::new(size, Pixel::placeholder(0, 0), medium::default())
+    }
+
+    pub fn with_size_and_fill_pixel(size: Size, fill_pixel: Pixel) -> Result<Self, Error> {
+        Self::new(size, fill_pixel, medium::default())
     }
 }
 
@@ -135,6 +181,20 @@ impl<T: MediumTrait + Debug> fmt::Display for Screen<T> {
 mod test {
     use super::*;
     use point::Point;
+
+    #[test]
+    fn get_contents_test() {
+        let screen = Screen::with_size(Size::new(10, 5)).unwrap();
+        assert_eq!("          \n          \n          \n          \n          \n", screen.get_contents());
+
+        let screen = Screen::with_size_and_fill_pixel(Size::new(10, 5), Pixel::placeholder_with_character(0, 0, '.')).unwrap();
+        assert_eq!(r"..........
+..........
+..........
+..........
+..........
+", screen.get_contents());
+    }
 
     #[test]
     fn draw_text_test() {
