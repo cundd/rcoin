@@ -8,12 +8,13 @@ use term_style::style as color;
 use rate_provider;
 use matrix;
 use ui::Screen;
+use ui::CoordinatePrecision;
 use ui::medium::MediumTrait;
 use point::Point;
 
 mod trend;
 
-pub struct RatePrinter<'a, T:MediumTrait + Debug>  {
+pub struct RatePrinter<'a, T: MediumTrait + Debug> {
     fill: &'a str,
     space: &'a str,
     provider_type: &'a str,
@@ -23,7 +24,7 @@ pub struct RatePrinter<'a, T:MediumTrait + Debug>  {
     screen: Screen<T>,
 }
 
-impl<'a,T:MediumTrait + Debug> RatePrinter<'a,T> {
+impl<'a, T: MediumTrait + Debug> RatePrinter<'a, T> {
     pub fn new(screen: Screen<T>, chart: Chart, provider_type: &'a str, fill: &'a str, space: &'a str, history_size: Option<usize>) -> Self {
         let time_series = build_time_series(&chart, history_size);
         RatePrinter {
@@ -52,6 +53,7 @@ impl<'a,T:MediumTrait + Debug> RatePrinter<'a,T> {
                 );
 
                 if let Err(e) = self.screen.draw_text_wrapping(&Point::new(0, 0), &output) {
+//                    println!("{:#?}", self.screen);
                     error!("{}", e.to_string())
                 }
 
@@ -67,7 +69,7 @@ impl<'a,T:MediumTrait + Debug> RatePrinter<'a,T> {
         }
     }
 
-    fn draw_row(&self, row: Option<&matrix::Row<rate::Rate>>, row_number: usize) -> String {
+    fn draw_row(&self, row: Option<&matrix::Row<rate::Rate>>, row_number: CoordinatePrecision) -> String {
         let header = match row {
             Some(row) => {
                 let (_, rate) = row.iter().next().expect(&format!("No items found in row at {}", row_number));
@@ -79,14 +81,14 @@ impl<'a,T:MediumTrait + Debug> RatePrinter<'a,T> {
 
         util::str_left_pad(
             &header,
-            self.chart.y_scala_width,
+            self.chart.y_scala_width as usize,
             ' ',
         ).to_string()
     }
 
     fn get_chart(&self, rate: &rate::Rate, last_rate: &Option<rate::Rate>) -> String {
         let conf = configuration::CallbackConfiguration::new(
-            |row: Option<&matrix::Row<rate::Rate>>, row_number: usize| self.draw_row(row, row_number),
+            |row: Option<&matrix::Row<rate::Rate>>, row_number: CoordinatePrecision| self.draw_row(row, row_number),
             |point: Option<rate::Rate>| self.draw_callback(&rate, last_rate, point),
         );
 
@@ -133,9 +135,7 @@ impl<'a,T:MediumTrait + Debug> RatePrinter<'a,T> {
             {
                 let matrix = matrix::Matrix::from_slice(&self.time_series.data());
 
-                println!("{:?}", self.time_series);
                 println!("Span from {:?} to {:?}", matrix.y_min(), matrix.y_max());
-                println!("{:#?}", matrix);
                 print!("{}[2J", 27 as char); // Clear the screen
             }
 
@@ -172,7 +172,7 @@ fn build_points_from_time_series(time_series: &RateSeries) -> Vec<rate::Rate> {
 
 fn build_time_series(chart: &Chart, history_size: Option<usize>) -> RateSeries {
     let chart_width = chart.width();
-    let prepared_history_size = match history_size {
+    let prepared_history_size: usize = match history_size {
         Some(history_size) => {
             if history_size > 0 {
                 history_size
@@ -184,7 +184,7 @@ fn build_time_series(chart: &Chart, history_size: Option<usize>) -> RateSeries {
             if chart_width <= chart.y_scala_width {
                 error!("Chart width must be bigger than {}", chart.y_scala_width)
             } else {
-                chart_width - chart.y_scala_width
+                (chart_width - chart.y_scala_width) as usize
             }
         }
     };

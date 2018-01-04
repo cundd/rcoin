@@ -10,6 +10,9 @@ pub use self::mode::Mode;
 use self::canvas::Canvas;
 use matrix::Matrix;
 use matrix::PointTrait;
+use ui::CoordinatePrecision;
+use ui::screen::DEFAULT_WIDTH;
+use ui::screen::DEFAULT_HEIGHT;
 
 #[allow(unused)]
 pub const BLOCK_FULL: &'static str = "\u{2588}";
@@ -20,36 +23,36 @@ pub const BLOCK_LOWER_HALF: &'static str = "\u{2584}";
 
 pub struct Chart {
     mode: Mode,
-    _width: usize,
-    _height: usize,
-    pub y_scala_width: usize,
-    pub x_scala_height: usize,
+    _width: CoordinatePrecision,
+    _height: CoordinatePrecision,
+    pub y_scala_width: CoordinatePrecision,
+    pub x_scala_height: CoordinatePrecision,
 }
 
 impl Chart {
-    pub fn new(width: usize, height: usize, x_scala_height: usize, y_scala_width: usize, mode: Mode) -> Self {
+    pub fn new(width: CoordinatePrecision, height: CoordinatePrecision, x_scala_height: CoordinatePrecision, y_scala_width: CoordinatePrecision, mode: Mode) -> Self {
         Chart { _width: width, _height: height, mode, x_scala_height, y_scala_width }
     }
 
-    pub fn width(&self) -> usize {
+    pub fn width(&self) -> CoordinatePrecision {
         if self._width > 0 {
             self._width
         } else {
             match term_size::dimensions() {
-                Some((default, _)) => default,
-                None => 30,
+                Some((dimension, _)) => dimension as CoordinatePrecision,
+                None => DEFAULT_WIDTH ,
             }
         }
     }
 
     #[allow(unused)]
-    pub fn height(&self) -> usize {
+    pub fn height(&self) -> CoordinatePrecision {
         if self._height > 0 {
             self._height
         } else {
             match term_size::dimensions() {
-                Some((_, default)) => default,
-                None => 10,
+                Some((_, dimension)) => (dimension - 1) as CoordinatePrecision, // Subtract one line for the status bar
+                None => DEFAULT_HEIGHT - 1,
             }
         }
     }

@@ -1,26 +1,27 @@
 use std::collections::BTreeMap;
 use std::fmt::Debug;
+use ui::CoordinatePrecision;
 
-pub type Row<I: Debug> = BTreeMap<usize, I>;
+pub type Row<I: Debug> = BTreeMap<CoordinatePrecision, I>;
 
 pub trait PointTrait: Clone {
-    fn x(&self) -> usize;
-    fn y(&self) -> usize;
+    fn x(&self) -> CoordinatePrecision;
+    fn y(&self) -> CoordinatePrecision;
 
-    fn with_x(&self, new_x: usize) -> Self;
-    fn with_y(&self, new_y: usize) -> Self;
-    fn with_x_y(&self, new_x: usize, new_y: usize) -> Self;
+    fn with_x(&self, new_x: CoordinatePrecision) -> Self;
+    fn with_y(&self, new_y: CoordinatePrecision) -> Self;
+    fn with_x_y(&self, new_x: CoordinatePrecision, new_y: CoordinatePrecision) -> Self;
 }
 
 #[derive(Debug, Clone)]
 pub struct Matrix<I: Clone + PointTrait> {
     len: usize,
-    pub  rows: BTreeMap<usize, Row<I>>,
+    pub  rows: BTreeMap<CoordinatePrecision, Row<I>>,
 }
 
 impl<I: Clone + PointTrait> Matrix<I> {
     pub fn from_slice(points: &[I]) -> Self {
-        let mut rows: BTreeMap<usize, Row<I>> = BTreeMap::new();
+        let mut rows: BTreeMap<CoordinatePrecision, Row<I>> = BTreeMap::new();
         let len = points.len();
 
         for point in points {
@@ -46,7 +47,7 @@ impl<I: Clone + PointTrait> Matrix<I> {
 
 
     #[allow(unused)]
-    fn new(len: usize, rows: BTreeMap<usize, Row<I>>) -> Self {
+    fn new(len: usize, rows: BTreeMap<CoordinatePrecision, Row<I>>) -> Self {
         Matrix { len, rows }
     }
 
@@ -62,7 +63,7 @@ impl<I: Clone + PointTrait> Matrix<I> {
         Matrix::from_vec(temp_vec)
     }
 
-    pub fn get(&self, row: usize, column: usize) -> Option<I> {
+    pub fn get(&self, row: CoordinatePrecision, column: CoordinatePrecision) -> Option<I> {
         if let Some(row) = self.rows.get(&row) {
             match row.get(&column) {
                 Some(point) => Some(point.clone()),
@@ -73,12 +74,12 @@ impl<I: Clone + PointTrait> Matrix<I> {
         }
     }
 
-    pub fn get_row(&self, row: usize) -> Option<&Row<I>> {
+    pub fn get_row(&self, row: CoordinatePrecision) -> Option<&Row<I>> {
         self.rows.get(&row)
     }
 
     #[allow(unused)]
-    pub fn has(&self, row: usize, column: usize) -> bool {
+    pub fn has(&self, row: CoordinatePrecision, column: CoordinatePrecision) -> bool {
         if let Some(point_row) = self.rows.get(&row) {
             match point_row.get(&column) {
                 Some(_) => true,
@@ -89,12 +90,12 @@ impl<I: Clone + PointTrait> Matrix<I> {
         }
     }
 
-    pub fn x_max(&self) -> Option<usize> {
+    pub fn x_max(&self) -> Option<CoordinatePrecision> {
         if self.is_empty() {
             return None;
         }
 
-        let mut x_max: usize = 0;
+        let mut x_max: CoordinatePrecision = 0;
         for (_, row) in &self.rows {
             if let Some(&current_x) = row.keys().rev().nth(0) {
                 if x_max < current_x {
@@ -106,7 +107,7 @@ impl<I: Clone + PointTrait> Matrix<I> {
         Some(x_max)
     }
 
-    pub fn y_max(&self) -> Option<usize> {
+    pub fn y_max(&self) -> Option<CoordinatePrecision> {
         if let Some(y) = self.rows.keys().rev().nth(0) {
             Some(*y)
         } else {
@@ -115,7 +116,7 @@ impl<I: Clone + PointTrait> Matrix<I> {
     }
 
     #[allow(unused)]
-    pub fn x_y_max(&self) -> Option<(usize, usize)> {
+    pub fn x_y_max(&self) -> Option<(CoordinatePrecision, CoordinatePrecision)> {
         if self.is_empty() {
             return None;
         }
@@ -127,12 +128,12 @@ impl<I: Clone + PointTrait> Matrix<I> {
         return self.len == 0;
     }
 
-    pub fn x_min(&self) -> Option<usize> {
+    pub fn x_min(&self) -> Option<CoordinatePrecision> {
         if self.is_empty() {
             return None;
         }
 
-        let mut x_min: usize = usize::max_value();
+        let mut x_min = CoordinatePrecision::max_value();
         for (_, row) in &self.rows {
             if let Some(&current_x) = row.keys().nth(0) {
                 if x_min > current_x {
@@ -144,7 +145,7 @@ impl<I: Clone + PointTrait> Matrix<I> {
         Some(x_min)
     }
 
-    pub fn y_min(&self) -> Option<usize> {
+    pub fn y_min(&self) -> Option<CoordinatePrecision> {
         if self.is_empty() {
             return None;
         }
@@ -157,7 +158,7 @@ impl<I: Clone + PointTrait> Matrix<I> {
     }
 
     #[allow(unused)]
-    pub fn x_y_min(&self) -> Option<(usize, usize)> {
+    pub fn x_y_min(&self) -> Option<(CoordinatePrecision, CoordinatePrecision)> {
         if self.is_empty() {
             return None;
         }
@@ -172,22 +173,22 @@ mod tests {
 
     #[derive(Debug, Clone)]
     struct Point {
-        x: usize,
-        y: usize,
+        x: CoordinatePrecision,
+        y: CoordinatePrecision,
     }
 
     impl Point {
-        fn new(x: usize, y: usize) -> Self {
+        fn new(x: CoordinatePrecision, y: CoordinatePrecision) -> Self {
             Point { x, y }
         }
     }
 
     impl PointTrait for Point {
-        fn x(&self) -> usize { self.x }
-        fn y(&self) -> usize { self.y }
-        fn with_x(&self, _: usize) -> Self { unimplemented!(); }
-        fn with_y(&self, _: usize) -> Self { unimplemented!(); }
-        fn with_x_y(&self, _: usize, _: usize) -> Self { unimplemented!(); }
+        fn x(&self) -> CoordinatePrecision { self.x }
+        fn y(&self) -> CoordinatePrecision { self.y }
+        fn with_x(&self, _: CoordinatePrecision) -> Self { unimplemented!(); }
+        fn with_y(&self, _: CoordinatePrecision) -> Self { unimplemented!(); }
+        fn with_x_y(&self, _: CoordinatePrecision, _: CoordinatePrecision) -> Self { unimplemented!(); }
     }
 
     fn build_test_vec() -> Vec<Point> {
@@ -232,7 +233,7 @@ mod tests {
             assert_eq!(false, matrix.is_empty());
         }
         {
-            assert!(Matrix::new(0, BTreeMap::<usize, Row<Point>>::new()).is_empty());
+            assert!(Matrix::new(0, BTreeMap::<CoordinatePrecision, Row<Point>>::new()).is_empty());
         }
         {
             let mut rows = BTreeMap::new();

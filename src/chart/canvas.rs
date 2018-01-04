@@ -1,16 +1,16 @@
 use matrix::*;
 use super::configuration::*;
 use super::padding::Padding;
-
+use ui::CoordinatePrecision;
 
 pub struct Canvas {
-    width: usize,
-    height: usize,
+    width: CoordinatePrecision,
+    height: CoordinatePrecision,
     padding: Padding,
 }
 
 impl Canvas {
-    pub fn new(width: usize, height: usize, padding: Padding) -> Self {
+    pub fn new(width: CoordinatePrecision, height: CoordinatePrecision, padding: Padding) -> Self {
         Canvas { width, height, padding }
     }
 
@@ -45,7 +45,7 @@ impl Canvas {
         if matrix.is_empty() {
             return "".to_string();
         }
-        let mut buffer = String::with_capacity(self.width * self.height);
+        let mut buffer = String::with_capacity((self.width * self.height) as usize);
         let y_min = matrix.y_min().unwrap();
 
         let y_start = if y_min < self.padding.bottom { 0 } else { y_min - self.padding.bottom };
@@ -63,14 +63,14 @@ impl Canvas {
     pub fn draw_points_with_callback<F, T: PointTrait>(&self, matrix: Matrix<T>, draw_callback: F) -> String
         where F: Fn(Option<T>) -> String {
         let conf = super::configuration::CallbackConfiguration::new(
-            |_: Option<&Row<T>>, _: usize| "".to_string(),
+            |_: Option<&Row<T>>, _: CoordinatePrecision| "".to_string(),
             draw_callback,
         );
         self.draw_points_with_configuration(matrix, &conf)
     }
 
-    fn draw_row_with_configuration<T: PointTrait>(&self, row_number: usize, matrix: &Matrix<T>, conf: &Configuration<T>) -> String {
-        let mut buffer = String::with_capacity(self.width);
+    fn draw_row_with_configuration<T: PointTrait>(&self, row_number: CoordinatePrecision, matrix: &Matrix<T>, conf: &Configuration<T>) -> String {
+        let mut buffer = String::with_capacity(self.width as usize);
         let x_min = matrix.x_min().unwrap();
         let x_start = if x_min < self.padding.left { 0 } else { x_min - self.padding.bottom };
         let x_end = x_start + self.width + self.padding.right;

@@ -1,13 +1,15 @@
+use ui::CoordinatePrecision;
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Padding {
-    pub top: usize,
-    pub right: usize,
-    pub bottom: usize,
-    pub left: usize,
+    pub top: CoordinatePrecision,
+    pub right: CoordinatePrecision,
+    pub bottom: CoordinatePrecision,
+    pub left: CoordinatePrecision,
 }
 
 impl Padding {
-    pub fn new(top: usize, right: usize, bottom: usize, left: usize) -> Self {
+    pub fn new(top: CoordinatePrecision, right: CoordinatePrecision, bottom: CoordinatePrecision, left: CoordinatePrecision) -> Self {
         Padding {
             top,
             right,

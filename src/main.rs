@@ -20,7 +20,7 @@ mod point;
 
 use std::{thread, time};
 use clap::{App, Arg, ArgMatches};
-use ui::Screen;
+use ui::{CoordinatePrecision, Screen};
 
 fn get_mode(matches: &ArgMatches) -> chart::Mode {
     match matches.value_of("mode") {
@@ -34,7 +34,7 @@ fn get_mode(matches: &ArgMatches) -> chart::Mode {
     }
 }
 
-fn get_dimension_argument(name: &str, matches: &ArgMatches) -> usize {
+fn get_dimension_argument(name: &str, matches: &ArgMatches) -> CoordinatePrecision {
     let default = 0;
     match matches.value_of(name) {
         Some(arg) => {
@@ -47,11 +47,11 @@ fn get_dimension_argument(name: &str, matches: &ArgMatches) -> usize {
     }
 }
 
-fn get_chart_width(matches: &ArgMatches) -> usize {
+fn get_chart_width(matches: &ArgMatches) -> CoordinatePrecision {
     get_dimension_argument("width", matches)
 }
 
-fn get_chart_height(matches: &ArgMatches) -> usize {
+fn get_chart_height(matches: &ArgMatches) -> CoordinatePrecision {
     get_dimension_argument("height", matches)
 }
 

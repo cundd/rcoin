@@ -1,18 +1,18 @@
 use std::collections::BTreeMap;
 use super::PointTrait;
+use ui::CoordinatePrecision;
 
-
-type Row<I: PointTrait> = BTreeMap<usize, I>;
+type Row<I: PointTrait> = BTreeMap<CoordinatePrecision, I>;
 
 pub trait Configuration<T: PointTrait> {
-    fn draw_row(&self, row: Option<&Row<T>>, row_number: usize) -> String;
+    fn draw_row(&self, row: Option<&Row<T>>, row_number: CoordinatePrecision) -> String;
 
     fn draw_point(&self, point: Option<T>) -> String;
 }
 
 pub struct CallbackConfiguration<R, P, T: PointTrait>
     where
-        R: Fn(Option<&Row<T>>, usize) -> String,
+        R: Fn(Option<&Row<T>>, CoordinatePrecision) -> String,
         P: Fn(Option<T>) -> String {
     pub draw_row: R,
     pub draw_point: P,
@@ -21,7 +21,7 @@ pub struct CallbackConfiguration<R, P, T: PointTrait>
 
 impl<R, P, T: PointTrait> CallbackConfiguration<R, P, T>
     where
-        R: Fn(Option<&Row<T>>, usize) -> String,
+        R: Fn(Option<&Row<T>>, CoordinatePrecision) -> String,
         P: Fn(Option<T>) -> String
 {
     pub fn new(draw_row: R, draw_point: P) -> Self {
@@ -34,9 +34,9 @@ impl<R, P, T: PointTrait> CallbackConfiguration<R, P, T>
 }
 
 impl<R, P, T: PointTrait> CallbackConfiguration<R, P, T>
-    where R: Fn(Option<&Row<T>>, usize) -> String,
+    where R: Fn(Option<&Row<T>>, CoordinatePrecision) -> String,
           P: Fn(Option<T>) -> String {
-    pub fn draw_row(&self, row: Option<&Row<T>>, row_number: usize) -> String {
+    pub fn draw_row(&self, row: Option<&Row<T>>, row_number: CoordinatePrecision) -> String {
         let callback = &self.draw_row;
         callback(row, row_number)
     }
@@ -48,9 +48,9 @@ impl<R, P, T: PointTrait> CallbackConfiguration<R, P, T>
 }
 
 impl<R, P, T: PointTrait> Configuration<T> for CallbackConfiguration<R, P, T>
-    where R: Fn(Option<&Row<T>>, usize) -> String,
+    where R: Fn(Option<&Row<T>>, CoordinatePrecision) -> String,
           P: Fn(Option<T>) -> String {
-    fn draw_row(&self, row: Option<&Row<T>>, row_number: usize) -> String {
+    fn draw_row(&self, row: Option<&Row<T>>, row_number: CoordinatePrecision) -> String {
         CallbackConfiguration::draw_row(self, row, row_number)
     }
 
@@ -67,11 +67,11 @@ mod tests {
     struct Point {}
 
     impl PointTrait for Point {
-        fn x(&self) -> usize { 10 }
-        fn y(&self) -> usize { 20 }
-        fn with_x(&self, _: usize) -> Self { unimplemented!(); }
-        fn with_y(&self, _: usize) -> Self { unimplemented!(); }
-        fn with_x_y(&self, _: usize, _: usize) -> Self { unimplemented!(); }
+        fn x(&self) -> CoordinatePrecision { 10 }
+        fn y(&self) -> CoordinatePrecision { 20 }
+        fn with_x(&self, _: CoordinatePrecision) -> Self { unimplemented!(); }
+        fn with_y(&self, _: CoordinatePrecision) -> Self { unimplemented!(); }
+        fn with_x_y(&self, _: CoordinatePrecision, _: CoordinatePrecision) -> Self { unimplemented!(); }
     }
 
     #[test]

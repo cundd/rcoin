@@ -4,6 +4,7 @@ mod currency;
 pub use self::rate_series::RateSeries;
 pub use self::currency::Currency;
 use matrix::PointTrait;
+use ui::CoordinatePrecision;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Rate {
@@ -12,8 +13,8 @@ pub struct Rate {
     pub price_usd: f32,
     pub price_eur: f32,
 
-    x: usize,
-    y: usize,
+    x: CoordinatePrecision,
+    y: CoordinatePrecision,
 }
 
 impl Rate {
@@ -28,35 +29,35 @@ impl Rate {
         }
     }
 
-    pub fn price_to_coordinate(price: f32) -> usize {
-        price.round() as usize
+    pub fn price_to_coordinate(price: f32) -> CoordinatePrecision {
+        price.round() as CoordinatePrecision
     }
 }
 
 impl PointTrait for Rate {
-    fn x(&self) -> usize {
+    fn x(&self) -> CoordinatePrecision {
         self.x
     }
 
-    fn y(&self) -> usize {
+    fn y(&self) -> CoordinatePrecision {
         self.y
     }
 
-    fn with_x(&self, new_x: usize) -> Self {
+    fn with_x(&self, new_x: CoordinatePrecision) -> Self {
         let mut clone = self.clone();
         clone.x = new_x;
 
         clone
     }
 
-    fn with_y(&self, new_y: usize) -> Self {
+    fn with_y(&self, new_y: CoordinatePrecision) -> Self {
         let mut clone = self.clone();
         clone.y = new_y;
 
         clone
     }
 
-    fn with_x_y(&self, new_x: usize, new_y: usize) -> Self {
+    fn with_x_y(&self, new_x: CoordinatePrecision, new_y: CoordinatePrecision) -> Self {
         let mut clone = self.clone();
         clone.x = new_x;
         clone.y = new_y;

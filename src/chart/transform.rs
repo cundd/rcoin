@@ -2,11 +2,12 @@ use matrix::Matrix;
 use matrix::PointTrait;
 //use super::point::Point;
 use super::Chart;
+use ui::CoordinatePrecision;
 
 fn scale_with_factors<T: PointTrait>(matrix: &Matrix<T>, factor_x: f32, factor_y: f32) -> Matrix<T> {
     matrix.map(|p| p.with_x_y(
-        (p.x() as f32 * factor_x).floor() as usize,
-        (p.y() as f32 * factor_y).floor() as usize,
+        (p.x() as f32 * factor_x).floor() as CoordinatePrecision,
+        (p.y() as f32 * factor_y).floor() as CoordinatePrecision,
     ))
 }
 
