@@ -1,14 +1,15 @@
 use matrix::PointTrait;
+use ui::CoordinatePrecision;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Point {
-    pub x: usize,
-    pub y: usize,
+    pub x: CoordinatePrecision,
+    pub y: CoordinatePrecision,
 }
 
 impl Point {
     #[allow(unused)]
-    pub fn new(x: usize, y: usize) -> Self {
+    pub fn new(x: CoordinatePrecision, y: CoordinatePrecision) -> Self {
         Point { x, y }
     }
 
@@ -22,29 +23,29 @@ impl Point {
 }
 
 impl PointTrait for Point {
-    fn x(&self) -> usize {
+    fn x(&self) -> CoordinatePrecision {
         self.x
     }
 
-    fn y(&self) -> usize {
+    fn y(&self) -> CoordinatePrecision {
         self.y
     }
 
-    fn with_x(&self, new_x: usize) -> Self {
+    fn with_x(&self, new_x: CoordinatePrecision) -> Self {
         let mut clone = self.clone();
         clone.x = new_x;
 
         clone
     }
 
-    fn with_y(&self, new_y: usize) -> Self {
+    fn with_y(&self, new_y: CoordinatePrecision) -> Self {
         let mut clone = self.clone();
         clone.y = new_y;
 
         clone
     }
 
-    fn with_x_y(&self, new_x: usize, new_y: usize) -> Self {
+    fn with_x_y(&self, new_x: CoordinatePrecision, new_y: CoordinatePrecision) -> Self {
         let mut clone = self.clone();
         clone.x = new_x;
         clone.y = new_y;
