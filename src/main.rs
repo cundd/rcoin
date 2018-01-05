@@ -14,8 +14,9 @@ mod rate_provider;
 mod util;
 mod chart;
 mod matrix;
-mod rate_printer;
+#[macro_use]
 mod ui;
+mod rate_printer;
 mod point;
 
 use std::{thread, time};
@@ -175,7 +176,14 @@ fn main() {
             .takes_value(true))
         .get_matches();
 
-    let interval_seconds = get_interval(&matches);
+
+    let mut keyboard_listener = ui::keyboard::KeyboardListener::new();
+    keyboard_listener.add_listener('q', |key: char| {
+        println!("Detected pressed key '{}'", key);
+        return true;
+    });
+
+    let interval = time::Duration::from_millis(get_interval(&matches));
     let fill = get_chart_point(&matches);
     let space = get_chart_fill(&matches);
     let provider_type = get_provider_type(&matches);
@@ -191,12 +199,18 @@ fn main() {
 
     let screen = Screen::default().unwrap();
     let mut printer = rate_printer::RatePrinter::new(screen, chart, &provider_type, &fill, &space, get_history_size(&matches));
+
+    term_style::cursor::hide_cursor();
+
     loop {
         if printer.get_and_print_rates(currency).is_err() {
             break;
         }
+        let result: Vec<bool> = keyboard_listener.listen();
+        if !result.is_empty() && result.into_iter().find(|i| *i == true).is_some() {
+            break;
+        }
 
-        let interval = time::Duration::from_millis(interval_seconds);
         thread::sleep(interval);
     }
 

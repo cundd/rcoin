@@ -5,6 +5,7 @@ mod size;
 mod style;
 mod pixel;
 mod screen_buffer;
+pub mod keyboard;
 pub mod screen;
 pub mod medium;
 
