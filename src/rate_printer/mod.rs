@@ -7,6 +7,7 @@ use chart::*;
 use term_style::style as color;
 use rate_provider;
 use matrix;
+use ui::Error;
 use ui::Screen;
 use ui::CoordinatePrecision;
 use ui::medium::MediumTrait;
@@ -38,7 +39,7 @@ impl<'a, T: MediumTrait + Debug> RatePrinter<'a, T> {
         }
     }
 
-    pub fn get_and_print_rates(&mut self, currency: rate::Currency) -> Result<rate::Rate, ()> {
+    pub fn get_and_print_rates(&mut self, currency: rate::Currency) -> Result<rate::Rate, Error> {
         self.run_number += 1;
         match rate_provider::get(self.provider_type, currency) {
             Ok(rate) => {
@@ -52,20 +53,12 @@ impl<'a, T: MediumTrait + Debug> RatePrinter<'a, T> {
                     self.get_footer(&rate, &last_rate),
                 );
 
-                if let Err(e) = self.screen.draw_text_wrapping(&Point::new(0, 0), &output) {
-//                    println!("{:#?}", self.screen);
-                    error!("{}", e.to_string())
-                }
-
-                if let Err(e) = self.screen.flush() {
-                    error!("{}", e.to_string())
-                }
+                self.screen.draw_text_wrapping(&Point::new(0, 0), &output)?;
+                self.screen.flush()?;
 
                 Ok(rate)
             }
-            Err(e) => {
-                error!("{}", e.to_string())
-            }
+            Err(e) => Err(ui_error!(Misc, "{}", e.to_string()))
         }
     }
 

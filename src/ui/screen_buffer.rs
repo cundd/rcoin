@@ -4,6 +4,8 @@ use super::size::Size;
 use super::pixel::Pixel;
 use super::pixel::CoordinatePrecision;
 use super::error::*;
+use super::style;
+use super::style::*;
 
 #[derive(Debug)]
 pub struct ScreenBuffer {
@@ -92,38 +94,7 @@ impl ScreenBuffer {
     }
 
     pub fn get_contents(&self) -> String {
-        let width = self.size.width;
-        let height = self.size.height;
-        let mut y = 0;
-        let mut output = String::with_capacity(width as usize * height as usize + height as usize);
-
-        'row_loop: while y < height {
-            let mut current_index = y * width;
-            let mut x = 0;
-            'column_loop: while x < width {
-                let pixel = self.get_pixel_at_point(&Point::new(x, y))
-                    .expect(&format!("No Pixel found for {}x{}", x, y));
-
-                let character = match pixel.character {
-                    '\u{1b}' => panic!("Newline in user input detected"),
-                    '\n' => panic!("Newline in user input detected"),
-
-                    character @ _ if character.is_control() => Some('x'),
-                    character @ _ => Some(character),
-                };
-
-                if let Some(character) = character {
-                    output.push(character);
-                }
-
-                current_index += 1;
-                x += 1;
-            }
-            output.push('\n');
-            y += 1;
-        }
-
-        output
+        build_contents(self, true)
     }
 
     #[inline]
@@ -204,6 +175,44 @@ impl ScreenBuffer {
     }
 }
 
+#[inline]
+fn wrap_pixel(pixel: &Pixel) -> String {
+    if pixel.style == Style::Normal {
+        return pixel.character.to_string();
+    }
+    style::wrap(pixel.character, pixel.style, Style::Normal)
+}
+
+fn build_contents(buffer: &ScreenBuffer, with_colors: bool) -> String {
+    let width = buffer.size.width;
+    let height = buffer.size.height;
+    let mut y = 0;
+    let mut output = String::with_capacity(width as usize * height as usize + height as usize);
+
+    while y < height {
+        let mut current_index = y * width;
+        let mut x = 0;
+        while x < width {
+            let pixel = buffer.get_pixel_at_point(&Point::new(x, y))
+                .expect(&format!("No Pixel found for {}x{}", x, y));
+
+            if with_colors {
+                output.push_str(&wrap_pixel(&pixel));
+            } else {
+                output.push(pixel.character);
+            }
+
+            current_index += 1;
+            x += 1;
+        }
+        output.push('\n');
+        y += 1;
+    }
+
+    output
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -253,28 +262,6 @@ mod tests {
         assert_eq!(100 + 200 * 3_200 + 1, buffer.buffer.len());
     }
 
-//    #[test]
-//    fn draw_point_with_control_character() {
-//        let mut buffer = ScreenBuffer::with_size(Size::new(10, 20)).unwrap();
-//
-//        println!(" \u{1b}[");
-//        assert!(buffer.draw_point(&Point::new(5, 10), 'x').is_ok());
-//        assert_eq!("          \n          \n          \n          \n          \n          \n          \n          \n          \n          \n     x    \n          \n          \n          \n          \n          \n          \n          \n          \n          \n", buffer.get_contents());
-//
-//        //assert_eq!("\u{1b}[41mmy message\u{1b}[49m", bg_red("my message"));
-//        //assert_eq!("\u{1b}[41mmy message\u{1b}[0m", style("my message", BgRed));
-//        let mut buffer = ScreenBuffer::with_size(Size::new(10, 2)).unwrap();
-//
-//        assert!(buffer.draw_point(&Point::new(1, 0), '\u{1b}').is_ok());
-//        assert_eq!(" \u{1b}         \n          \n", buffer.get_contents());
-//
-//        assert!(buffer.draw_point(&Point::new(2, 0), '[').is_ok());
-//        assert!(buffer.draw_point(&Point::new(3, 0), '4').is_ok());
-//        assert!(buffer.draw_point(&Point::new(4, 0), '1').is_ok());
-//        assert!(buffer.draw_point(&Point::new(5, 0), 'm').is_ok());
-//        assert_eq!(" \u{1b}[41m         \n          \n", buffer.get_contents());
-//    }
-
     #[test]
     fn get_content_at_point_test() {
         let buffer = ScreenBuffer::with_size(Size::new(3_200, 1_024)).unwrap();
@@ -301,18 +288,22 @@ mod tests {
 
     #[test]
     fn get_contents_empty_test() {
-        assert_eq!("  \n", ScreenBuffer::with_size(Size::new(2, 1)).unwrap().get_contents());
-        assert_eq!("  \n  \n", ScreenBuffer::with_size(Size::new(2, 2)).unwrap().get_contents());
+        assert_eq!("  \n", build_contents(&ScreenBuffer::with_size(Size::new(2, 1)).unwrap(), false));
+//        assert_eq!("  \n", ScreenBuffer::with_size(Size::new(2, 1)).unwrap().get_contents());
+        assert_eq!("  \n  \n", build_contents(&ScreenBuffer::with_size(Size::new(2, 2)).unwrap(), false));
+//        assert_eq!("  \n  \n", ScreenBuffer::with_size(Size::new(2, 2)).unwrap().get_contents());
     }
 
     #[test]
     fn get_contents_test() {
         let mut buffer = ScreenBuffer::with_size(Size::new(2, 2)).unwrap();
         assert!(buffer.draw_point(&Point::new(0, 0), 'x').is_ok());
-        assert_eq!("x \n  \n", buffer.get_contents());
+        assert_eq!("x \n  \n", build_contents(&buffer, false));
+//        assert_eq!("x \n  \n", buffer.get_contents());
 
         let mut buffer = ScreenBuffer::with_size(Size::new(10, 20)).unwrap();
         assert!(buffer.draw_point(&Point::new(5, 10), 'x').is_ok());
-        assert_eq!("          \n          \n          \n          \n          \n          \n          \n          \n          \n          \n     x    \n          \n          \n          \n          \n          \n          \n          \n          \n          \n", buffer.get_contents());
+        assert_eq!("          \n          \n          \n          \n          \n          \n          \n          \n          \n          \n     x    \n          \n          \n          \n          \n          \n          \n          \n          \n          \n", build_contents(&buffer, false));
+//        assert_eq!("          \n          \n          \n          \n          \n          \n          \n          \n          \n          \n     x    \n          \n          \n          \n          \n          \n          \n          \n          \n          \n", buffer.get_contents());
     }
 }

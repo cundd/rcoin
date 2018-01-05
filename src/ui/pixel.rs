@@ -20,10 +20,11 @@ impl Pixel {
     }
 
     pub fn with_point<T: PointTrait>(character: char, point: &T) -> Self {
-        let x = point.x() as CoordinatePrecision;
-        let y = point.x() as CoordinatePrecision;
+        Self::with_point_and_style(character, point, Style::Normal)
+    }
 
-        Self::new(character, x, y, Style::Normal)
+    pub fn with_point_and_style<T: PointTrait>(character: char, point: &T, style: Style) -> Self {
+        Self::new(character, point.x(), point.y(), style)
     }
 
     pub fn normal(character: char, x: CoordinatePrecision, y: CoordinatePrecision) -> Self {
@@ -78,7 +79,7 @@ impl PointTrait for Pixel {
 
     fn with_x_y(&self, new_x: CoordinatePrecision, new_y: CoordinatePrecision) -> Self {
         let mut clone = self.clone();
-        clone.x = new_x ;
+        clone.x = new_x;
         clone.y = new_y;
 
         clone
