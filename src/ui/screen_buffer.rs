@@ -71,7 +71,7 @@ impl ScreenBuffer {
     pub fn get_pixel_at_point<T: PointTrait>(&self, point: &T) -> Result<Pixel, Error> {
         let index = self.get_index_for_point(point)?;
         match self.get_pixel_at_index(index) {
-            Some(c) => Ok(Pixel::new(c.character, c.x, c.y, c.style)),
+            Some(c) => Ok(Pixel::new(c.character, c.x, c.y, c.styles)),
             None => Ok(self.blank_pixel.clone()),
         }
     }
@@ -177,16 +177,11 @@ impl ScreenBuffer {
 
 #[inline]
 fn wrap_pixel(pixel: &Pixel) -> String {
-    if pixel.style == Style::Normal {
+    if pixel.styles == Styles::normal() {
         return pixel.character.to_string();
     }
-    if pixel.style.is_foreground() {
-        style::wrap(pixel.character, pixel.style, Style::DefaultForeground)
-    } else if pixel.style.is_background() {
-        style::wrap(pixel.character, pixel.style, Style::BgDefaultBackground)
-    } else {
-        style::wrap(pixel.character, pixel.style, Style::Normal)
-    }
+
+    style::wrap(pixel.character, pixel.styles)
 }
 
 fn build_contents(buffer: &ScreenBuffer, with_colors: bool) -> String {

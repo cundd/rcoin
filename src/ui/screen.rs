@@ -5,7 +5,7 @@ use matrix::PointTrait;
 use super::screen_buffer::ScreenBuffer;
 use super::pixel::CoordinatePrecision;
 use super::pixel::Pixel;
-use super::style::Style;
+use super::style::*;
 use super::medium;
 use super::medium::MediumTrait;
 use super::size::Size;
@@ -49,18 +49,18 @@ impl<T: MediumTrait + Debug> Screen<T> {
         let mut current_x = point.x();
         let mut index = 0;
         let mut chars: Vec<char> = text.chars().collect();
-        let mut style = Style::Normal;
+        let mut styles = Styles::normal();
 
         while let Some(character) = chars.get(index) {
             match *character {
                 '\n' => {}
                 character @ _ if character.is_control() => {
                     let (offset, new_style) = Self::consume_control_sequence(text, index);
-                    style = new_style;
+                    styles = new_style;
                     index += offset;
                 }
                 character @ _ => {
-                    let pixel = Pixel::with_point_and_style(character, &point.with_x(current_x), style);
+                    let pixel = Pixel::with_point_and_styles(character, &point.with_x(current_x), styles);
                     self.buffer.draw_pixel(pixel)?
                 }
             }
@@ -88,7 +88,7 @@ impl<T: MediumTrait + Debug> Screen<T> {
         let mut current_y = point.y();
         let mut index = 0;
         let mut chars: Vec<char> = text.chars().collect();
-        let mut style = Style::Normal;
+        let mut style = Styles::normal();
 
         while let Some(character) = chars.get(index) {
             // If the maximum x for this line is reached, set the coordinates to a new row
@@ -116,7 +116,7 @@ impl<T: MediumTrait + Debug> Screen<T> {
                     index += offset;
                 }
                 character @ _ => {
-                    let pixel = Pixel::with_point_and_style(character, &point.with_x_y(current_x, current_y), style);
+                    let pixel = Pixel::with_point_and_styles(character, &point.with_x_y(current_x, current_y), style);
                     self.buffer.draw_pixel(pixel)?;
                     current_x += 1;
                 }
@@ -137,7 +137,7 @@ impl<T: MediumTrait + Debug> Screen<T> {
     }
 
     #[inline]
-    fn consume_control_sequence<'a>(text: &str, start_index: usize) -> (usize, Style) {
+    fn consume_control_sequence<'a>(text: &str, start_index: usize) -> (usize, Styles) {
         let mut offset = 0;
         let mut style_string = String::new();
 
@@ -150,7 +150,8 @@ impl<T: MediumTrait + Debug> Screen<T> {
             offset += 1;
         }
 
-        let style = Style::from_str(&style_string).unwrap_or(Style::Normal);
+//        StyleTrait::from_str()
+        let style = Styles::from_str(&style_string).unwrap_or(Styles::normal());
 
         (offset, style)
     }
