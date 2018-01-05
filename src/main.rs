@@ -179,11 +179,10 @@ fn main() {
 
     let mut keyboard_listener = ui::keyboard::KeyboardListener::new();
     keyboard_listener.add_listener('q', |key: char| {
-        println!("Detected pressed key '{}'", key);
         return true;
     });
 
-    let interval = time::Duration::from_millis(get_interval(&matches));
+    let interval = time::Duration::from_millis(get_interval(&matches) / 5);
     let fill = get_chart_point(&matches);
     let space = get_chart_fill(&matches);
     let provider_type = get_provider_type(&matches);
@@ -192,28 +191,37 @@ fn main() {
     let chart = chart::Chart::new(
         get_chart_width(&matches),
         get_chart_height(&matches),
-        2,//1,
+        0,
         7,
         get_mode(&matches),
     );
 
     let screen = Screen::default().unwrap();
     let mut printer = rate_printer::RatePrinter::new(screen, chart, &provider_type, &fill, &space, get_history_size(&matches));
-
+    let mut run_number = 0;
+    let mut error: Option<self::ui::Error> = None;
     term_style::cursor::hide_cursor();
 
     loop {
-        if printer.get_and_print_rates(currency).is_err() {
-            break;
+        if run_number == 0 || run_number % 5 == 0 {
+            if let Err(e) = printer.get_and_print_rates(currency) {
+                error = Some(e);
+                break;
+            }
         }
         let result: Vec<bool> = keyboard_listener.listen();
         if !result.is_empty() && result.into_iter().find(|i| *i == true).is_some() {
             break;
         }
+        run_number += 1;
 
         thread::sleep(interval);
     }
 
     term_style::cursor::show_cursor();
+
+    if let Some(error) = error {
+        error!("{}", error);
+    }
 }
 

@@ -27,19 +27,6 @@ pub struct Screen<T: MediumTrait + Debug> {
     medium: T,
 }
 
-fn debug_multi_line(text: &str, until: usize) {
-    let mut index = 0;
-    while let Some(character) = text.chars().nth(index) {
-        print!("{}", character);
-
-        index += 1;
-
-        if index > until {
-            break;
-        }
-    }
-}
-
 #[allow(unused)]
 impl<T: MediumTrait + Debug> Screen<T> {
     pub fn new(size: Size, fill_pixel: Pixel, medium: T) -> Result<Self, Error> {
@@ -130,10 +117,7 @@ impl<T: MediumTrait + Debug> Screen<T> {
                 }
                 character @ _ => {
                     let pixel = Pixel::with_point_and_style(character, &point.with_x_y(current_x, current_y), style);
-                    if let Err(e) = self.buffer.draw_pixel(pixel) {
-                        debug_multi_line(text, index);
-                        return Err(e);
-                    }
+                    self.buffer.draw_pixel(pixel)?;
                     current_x += 1;
                 }
             }

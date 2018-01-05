@@ -114,22 +114,19 @@ impl<'a, T: MediumTrait + Debug> RatePrinter<'a, T> {
         let provider_name = rate_provider::get_name(self.provider_type).unwrap_or("");
         let col_4 = format!("[{}]", provider_name);
 
-        let footer_complete = if space_left >= (col_4.chars().count() as isize) {
+        if space_left >= (col_4.chars().count() as isize) {
             format!("{} {} {} {}", col_1, col_2, col_3, util::str_left_pad(&format!("[{}]", provider_name), space_left as usize, ' '))
         } else {
             format!("{} {} {}", col_1, col_2, col_3)
-        };
-
-        color::reverse(&footer_complete)
+        }
     }
 
     fn get_header(&self, _: &rate::Rate, _: &Option<rate::Rate>) -> String {
         #[cfg(debug_assertions)]
             {
-                let matrix = matrix::Matrix::from_slice(&self.time_series.data());
-
-                println!("Span from {:?} to {:?}", matrix.y_min(), matrix.y_max());
-                print!("{}[2J", 27 as char); // Clear the screen
+//                let matrix = matrix::Matrix::from_slice(&self.time_series.data());
+//                println!("Span from {:?} to {:?}", matrix.y_min(), matrix.y_max());
+//                print!("{}[2J", 27 as char); // Clear the screen
             }
 
         "".to_string()

@@ -180,7 +180,13 @@ fn wrap_pixel(pixel: &Pixel) -> String {
     if pixel.style == Style::Normal {
         return pixel.character.to_string();
     }
-    style::wrap(pixel.character, pixel.style, Style::Normal)
+    if pixel.style.is_foreground() {
+        style::wrap(pixel.character, pixel.style, Style::DefaultForeground)
+    } else if pixel.style.is_background() {
+        style::wrap(pixel.character, pixel.style, Style::BgDefaultBackground)
+    } else {
+        style::wrap(pixel.character, pixel.style, Style::Normal)
+    }
 }
 
 fn build_contents(buffer: &ScreenBuffer, with_colors: bool) -> String {

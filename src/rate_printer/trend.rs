@@ -34,8 +34,8 @@ pub fn get_trend_sign(current_rate: &rate::Rate, last_rate: &Option<rate::Rate>,
 
     if colors {
         match trend {
-            -1 => color::bg_red("▼"),
-            1 => color::bg_green("▲"),
+            -1 => color::red("▼"),
+            1 => color::green("▲"),
             0 => " ".to_string(),
             _ => " ".to_string(),
         }

@@ -323,11 +323,185 @@ impl Style {
             _ => None,
         }
     }
+
+    #[allow(unused)]
+    pub fn is_attribute(&self) -> bool {
+        !self.is_foreground() && !self.is_background()
+    }
+
+    #[allow(unused)]
+    pub fn is_foreground(&self) -> bool {
+        match *self {
+            Style::DefaultForeground |
+            Style::Black |
+            Style::Red |
+            Style::Green |
+            Style::Yellow |
+            Style::Blue |
+            Style::Magenta |
+            Style::Cyan |
+            Style::LightGray |
+            Style::DarkGray |
+            Style::LightRed |
+            Style::LightGreen |
+            Style::LightYellow |
+            Style::LightBlue |
+            Style::LightMagenta |
+            Style::LightCyan |
+            Style::White => true,
+            _ => false
+        }
+    }
+
+    #[allow(unused)]
+    pub fn is_background(&self) -> bool {
+        match *self {
+            Style::BgDefaultBackground |
+            Style::BgBlack |
+            Style::BgRed |
+            Style::BgGreen |
+            Style::BgYellow |
+            Style::BgBlue |
+            Style::BgMagenta |
+            Style::BgCyan |
+            Style::BgLightGray |
+            Style::BgDarkGray |
+            Style::BgLightRed |
+            Style::BgLightGreen |
+            Style::BgLightYellow |
+            Style::BgLightBlue |
+            Style::BgLightMagenta |
+            Style::BgLightCyan |
+            Style::BgWhite => true,
+            _ => false
+        }
+    }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn is_foreground() {
+        assert!(Style::DefaultForeground.is_foreground());
+        assert!(Style::Black.is_foreground());
+        assert!(Style::Red.is_foreground());
+        assert!(Style::Green.is_foreground());
+        assert!(Style::Yellow.is_foreground());
+        assert!(Style::Blue.is_foreground());
+        assert!(Style::Magenta.is_foreground());
+        assert!(Style::Cyan.is_foreground());
+        assert!(Style::LightGray.is_foreground());
+        assert!(Style::DarkGray.is_foreground());
+        assert!(Style::LightRed.is_foreground());
+        assert!(Style::LightGreen.is_foreground());
+        assert!(Style::LightYellow.is_foreground());
+        assert!(Style::LightBlue.is_foreground());
+        assert!(Style::LightMagenta.is_foreground());
+        assert!(Style::LightCyan.is_foreground());
+        assert!(Style::White.is_foreground());
+        assert!(!Style::BgDefaultBackground.is_foreground());
+        assert!(!Style::BgBlack.is_foreground());
+        assert!(!Style::BgRed.is_foreground());
+        assert!(!Style::BgGreen.is_foreground());
+        assert!(!Style::BgYellow.is_foreground());
+        assert!(!Style::BgBlue.is_foreground());
+        assert!(!Style::BgMagenta.is_foreground());
+        assert!(!Style::BgCyan.is_foreground());
+        assert!(!Style::BgLightGray.is_foreground());
+        assert!(!Style::BgDarkGray.is_foreground());
+        assert!(!Style::BgLightRed.is_foreground());
+        assert!(!Style::BgLightGreen.is_foreground());
+        assert!(!Style::BgLightYellow.is_foreground());
+        assert!(!Style::BgLightBlue.is_foreground());
+        assert!(!Style::BgLightMagenta.is_foreground());
+        assert!(!Style::BgLightCyan.is_foreground());
+        assert!(!Style::BgWhite.is_foreground());
+    }
+
+    #[test]
+    fn is_background() {
+        assert!(Style::BgDefaultBackground.is_background());
+        assert!(Style::BgBlack.is_background());
+        assert!(Style::BgRed.is_background());
+        assert!(Style::BgGreen.is_background());
+        assert!(Style::BgYellow.is_background());
+        assert!(Style::BgBlue.is_background());
+        assert!(Style::BgMagenta.is_background());
+        assert!(Style::BgCyan.is_background());
+        assert!(Style::BgLightGray.is_background());
+        assert!(Style::BgDarkGray.is_background());
+        assert!(Style::BgLightRed.is_background());
+        assert!(Style::BgLightGreen.is_background());
+        assert!(Style::BgLightYellow.is_background());
+        assert!(Style::BgLightBlue.is_background());
+        assert!(Style::BgLightMagenta.is_background());
+        assert!(Style::BgLightCyan.is_background());
+        assert!(Style::BgWhite.is_background());
+        assert!(!Style::DefaultForeground.is_background());
+        assert!(!Style::Black.is_background());
+        assert!(!Style::Red.is_background());
+        assert!(!Style::Green.is_background());
+        assert!(!Style::Yellow.is_background());
+        assert!(!Style::Blue.is_background());
+        assert!(!Style::Magenta.is_background());
+        assert!(!Style::Cyan.is_background());
+        assert!(!Style::LightGray.is_background());
+        assert!(!Style::DarkGray.is_background());
+        assert!(!Style::LightRed.is_background());
+        assert!(!Style::LightGreen.is_background());
+        assert!(!Style::LightYellow.is_background());
+        assert!(!Style::LightBlue.is_background());
+        assert!(!Style::LightMagenta.is_background());
+        assert!(!Style::LightCyan.is_background());
+        assert!(!Style::White.is_background());
+    }
+
+    #[test]
+    fn is_attribute() {
+        assert!(Style::Normal.is_attribute());
+        assert!(Style::BoldBright.is_attribute());
+        assert!(Style::Dim.is_attribute());
+        assert!(Style::Underlined.is_attribute());
+        assert!(Style::Blink.is_attribute());
+        assert!(Style::Reverse.is_attribute());
+        assert!(Style::Hidden.is_attribute());
+        assert!(!Style::BgDefaultBackground.is_attribute());
+        assert!(!Style::BgBlack.is_attribute());
+        assert!(!Style::BgRed.is_attribute());
+        assert!(!Style::BgGreen.is_attribute());
+        assert!(!Style::BgYellow.is_attribute());
+        assert!(!Style::BgBlue.is_attribute());
+        assert!(!Style::BgMagenta.is_attribute());
+        assert!(!Style::BgCyan.is_attribute());
+        assert!(!Style::BgLightGray.is_attribute());
+        assert!(!Style::BgDarkGray.is_attribute());
+        assert!(!Style::BgLightRed.is_attribute());
+        assert!(!Style::BgLightGreen.is_attribute());
+        assert!(!Style::BgLightYellow.is_attribute());
+        assert!(!Style::BgLightBlue.is_attribute());
+        assert!(!Style::BgLightMagenta.is_attribute());
+        assert!(!Style::BgLightCyan.is_attribute());
+        assert!(!Style::BgWhite.is_attribute());
+        assert!(!Style::DefaultForeground.is_attribute());
+        assert!(!Style::Black.is_attribute());
+        assert!(!Style::Red.is_attribute());
+        assert!(!Style::Green.is_attribute());
+        assert!(!Style::Yellow.is_attribute());
+        assert!(!Style::Blue.is_attribute());
+        assert!(!Style::Magenta.is_attribute());
+        assert!(!Style::Cyan.is_attribute());
+        assert!(!Style::LightGray.is_attribute());
+        assert!(!Style::DarkGray.is_attribute());
+        assert!(!Style::LightRed.is_attribute());
+        assert!(!Style::LightGreen.is_attribute());
+        assert!(!Style::LightYellow.is_attribute());
+        assert!(!Style::LightBlue.is_attribute());
+        assert!(!Style::LightMagenta.is_attribute());
+        assert!(!Style::LightCyan.is_attribute());
+        assert!(!Style::White.is_attribute());
+    }
 
     #[test]
     fn from_ut8_test() {
