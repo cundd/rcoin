@@ -79,6 +79,26 @@ impl<T: MediumTrait + Debug> Screen<T> {
     /// Keep in mind, that these operations are not transactional. If an error occurs with the nth
     /// character, the previous characters are still stored
     pub fn draw_text_wrapping<P: PointTrait + Debug>(&mut self, point: &P, text: &str) -> Result<(), Error> {
+        self.draw_multi_line_text_wrapping(point, text, true)
+    }
+
+    /// Insert the text at the given point with support for multi-line text
+    ///
+    /// An error will be returned if one the text's characters does not fit into the underlying buffer
+    ///
+    /// Keep in mind, that these operations are not transactional. If an error occurs with the nth
+    /// character, the previous characters are still stored
+    pub fn draw_multi_line_text<P: PointTrait + Debug>(&mut self, point: &P, text: &str) -> Result<(), Error> {
+        self.draw_multi_line_text_wrapping(point, text, false)
+    }
+
+    /// Insert the text at the given point with support for multi-line text
+   ///
+   /// An error will be returned if one the text's characters does not fit into the underlying buffer
+   ///
+   /// Keep in mind, that these operations are not transactional. If an error occurs with the nth
+   /// character, the previous characters are still stored
+    fn draw_multi_line_text_wrapping<P: PointTrait + Debug>(&mut self, point: &P, text: &str, auto_wrap: bool) -> Result<(), Error> {
         let lines_count = text.matches('\n').count();
         if lines_count > self.buffer.height() as usize {
             return Err(ui_error!(SizeError, "Buffer height is {} but the input text contains {} lines", self.buffer.height(), lines_count));
@@ -91,14 +111,16 @@ impl<T: MediumTrait + Debug> Screen<T> {
         let mut style = Styles::normal();
 
         while let Some(character) = chars.get(index) {
-            // If the maximum x for this line is reached, set the coordinates to a new row
-            if current_x >= self.buffer.width() {
-                current_y += 1;
-                current_x = 0;
+            if auto_wrap {
+                // If the maximum x for this line is reached, set the coordinates to a new row
+                if current_x >= self.buffer.width() {
+                    current_y += 1;
+                    current_x = 0;
 
-                if *character == '\n' {
-                    index += 1;
-                    continue;
+                    if *character == '\n' {
+                        index += 1;
+                        continue;
+                    }
                 }
             }
 

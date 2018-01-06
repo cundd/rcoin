@@ -178,7 +178,7 @@ fn main() {
 
 
     let mut keyboard_listener = ui::keyboard::KeyboardListener::new();
-    keyboard_listener.add_listener('q', |key: char| {
+    keyboard_listener.add_listener('q', |_| {
         return true;
     });
 
