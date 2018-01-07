@@ -53,7 +53,7 @@ impl<'a, T: MediumTrait + Debug> RatePrinter<'a, T> {
                     self.get_footer(&rate, &last_rate),
                 );
 
-                self.screen.draw_text_wrapping(&Point::new(0, 0), &output)?;
+                self.screen.draw_multi_line_text(&Point::new(0, 0), &output)?;
                 self.screen.flush()?;
 
                 Ok(rate)
