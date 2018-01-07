@@ -5,6 +5,7 @@ extern crate serde_json;
 extern crate clap;
 extern crate term_size;
 extern crate chrono;
+extern crate rand;
 
 #[macro_use]
 mod error;

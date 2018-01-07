@@ -1,5 +1,6 @@
 extern crate curl;
 
+mod faker;
 mod coin_market_cap;
 mod coin_desk;
 mod blockchain_info;
@@ -100,6 +101,7 @@ pub fn get<S>(provider_type: S, currency: Currency) -> Result<rate::Rate, Provid
         "coinmarketcap" | "coin_market_cap" => coin_market_cap::CoinMarketCap::get(currency),
         "blockchaininfo" | "blockchain_info" => blockchain_info::BlockchainInfo::get(currency),
         "cryptocompare" | "crypto_compare" => crypto_compare::CryptoCompare::get(currency),
+        "faker" => faker::Faker::get(currency),
         _ => Err(ProviderError::new(format!("No provider for type '{}' found", provider_type_string)))
     }
 }
@@ -114,6 +116,7 @@ pub fn get_name<S>(provider_type: S) -> Option<&'static str>
         "coinmarketcap" | "coin_market_cap" => Some(coin_market_cap::CoinMarketCap::get_name()),
         "blockchaininfo" | "blockchain_info" => Some(blockchain_info::BlockchainInfo::get_name()),
         "cryptocompare" | "crypto_compare" => Some(crypto_compare::CryptoCompare::get_name()),
+        "faker" => Some(faker::Faker::get_name()),
         _ => None,
     }
 }
@@ -126,6 +129,7 @@ pub fn get_all_names() -> Vec<&'static str> {
         coin_market_cap::CoinMarketCap::get_name(),
         blockchain_info::BlockchainInfo::get_name(),
         crypto_compare::CryptoCompare::get_name(),
+        faker::Faker::get_name(),
     ]
 }
 
