@@ -23,6 +23,7 @@ mod point;
 use std::{thread, time};
 use clap::{App, Arg, ArgMatches};
 use ui::{CoordinatePrecision, Screen};
+use rate_provider::*;
 
 fn get_mode(matches: &ArgMatches) -> chart::Mode {
     match matches.value_of("mode") {
@@ -110,7 +111,7 @@ fn get_chart_fill(matches: &ArgMatches) -> String {
 fn get_provider_type(matches: &ArgMatches) -> String {
     match matches.value_of("provider_type") {
         Some(provider_type) => provider_type.to_string(),
-        None => "CoinDesk".to_string(),
+        None => CoinMarketCap::get_name().to_string(),
     }
 }
 
