@@ -84,18 +84,6 @@ pub trait RateProvider {
     }
 }
 
-
-//pub fn get_provider(id: &str) -> Box<&RateProvider> {
-//    match id {
-//        "CoinDesk"
-//        | "coindesk"
-//        | "coin_desk" => Box::new(coin_desk::CoinDesk::new()),
-//        "CoinMarketCap"
-//        | "coinmarketcap"
-//        | "coin_market_cap" => Box::new(coin_market_cap::CoinMarketCap::new()),
-//    }
-//}
-
 #[allow(unused)]
 pub fn get<S>(provider_type: S, currency: Currency) -> Result<rate::Rate, ProviderError>
     where S: Into<String> {

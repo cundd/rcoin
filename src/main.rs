@@ -108,9 +108,9 @@ fn get_chart_fill(matches: &ArgMatches) -> String {
     }
 }
 
-fn get_provider_type(matches: &ArgMatches) -> String {
-    match matches.value_of("provider_type") {
-        Some(provider_type) => provider_type.to_string(),
+fn get_provider(matches: &ArgMatches) -> String {
+    match matches.value_of("provider") {
+        Some(provider) => provider.to_string(),
         None => CoinMarketCap::get_name().to_string(),
     }
 }
@@ -124,7 +124,7 @@ fn get_currency(matches: &ArgMatches) -> rate::Currency {
     panic!("Currency {} not supported", input)
 }
 
-fn get_all_provider_types() -> String {
+fn get_all_providers() -> String {
     rate_provider::get_all_names()
         .iter().map(|s| s.to_string()).collect::<Vec<String>>()
         .join(", ")
@@ -172,9 +172,9 @@ fn main() {
             .short("i")
             .help("Sets the interval between requests (in seconds)")
             .takes_value(true))
-        .arg(Arg::with_name("provider_type")
-            .long("provider-type")
-            .help(&format!("Fetch rates from the given provider [{}]", get_all_provider_types()))
+        .arg(Arg::with_name("provider")
+            .long("provider")
+            .help(&format!("Fetch rates from the given provider [{}]", get_all_providers()))
             .takes_value(true))
         .get_matches();
 
@@ -187,7 +187,7 @@ fn main() {
     let interval = time::Duration::from_millis(get_interval(&matches) / 5);
     let fill = get_chart_point(&matches);
     let space = get_chart_fill(&matches);
-    let provider_type = get_provider_type(&matches);
+    let provider = get_provider(&matches);
     let currency = get_currency(&matches);
 
     let chart = chart::Chart::new(
@@ -199,7 +199,7 @@ fn main() {
     );
 
     let screen = Screen::default().unwrap();
-    let mut printer = rate_printer::RatePrinter::new(screen, chart, &provider_type, &fill, &space, get_history_size(&matches));
+    let mut printer = rate_printer::RatePrinter::new(screen, chart, &provider, &fill, &space, get_history_size(&matches));
     let mut run_number = 0;
     let mut error: Option<self::ui::Error> = None;
     term_style::cursor::hide_cursor();
