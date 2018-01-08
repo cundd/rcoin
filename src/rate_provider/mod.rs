@@ -8,15 +8,19 @@ mod crypto_compare;
 mod provider_error;
 
 use std::time::SystemTime;
-
 use serde_json;
 use self::curl::easy::Easy;
 use rate;
 use rate::Currency;
 use self::provider_error::ProviderError;
 
+pub use self::coin_desk::CoinDesk;
+pub use self::coin_market_cap::CoinMarketCap;
+pub use self::blockchain_info::BlockchainInfo;
+pub use self::crypto_compare::CryptoCompare;
+pub use self::faker::Faker;
 
-trait RateProvider {
+pub trait RateProvider {
     fn get_name() -> &'static str;
     fn get(currency: Currency) -> Result<rate::Rate, ProviderError>;
     fn get_all() -> Result<Vec<rate::Rate>, ProviderError> {
