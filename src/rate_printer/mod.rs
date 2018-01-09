@@ -16,9 +16,10 @@ use point::Point;
 mod trend;
 
 pub struct RatePrinter<'a, T: MediumTrait + Debug> {
+    value: Option<f32>,
     fill: &'a str,
     space: &'a str,
-    provider_type: &'a str,
+    provider: &'a str,
     time_series: rate::RateSeries,
     chart: Chart,
     run_number: usize,
@@ -26,12 +27,13 @@ pub struct RatePrinter<'a, T: MediumTrait + Debug> {
 }
 
 impl<'a, T: MediumTrait + Debug> RatePrinter<'a, T> {
-    pub fn new(screen: Screen<T>, chart: Chart, provider_type: &'a str, fill: &'a str, space: &'a str, history_size: Option<usize>) -> Self {
+    pub fn new(screen: Screen<T>, chart: Chart, value: Option<f32>, provider: &'a str, fill: &'a str, space: &'a str, history_size: Option<usize>) -> Self {
         let time_series = build_time_series(&chart, history_size);
         RatePrinter {
             space,
             fill,
-            provider_type,
+            value,
+            provider,
             chart,
             time_series,
             screen,
@@ -41,7 +43,7 @@ impl<'a, T: MediumTrait + Debug> RatePrinter<'a, T> {
 
     pub fn get_and_print_rates(&mut self, currency: rate::Currency) -> Result<rate::Rate, Error> {
         self.run_number += 1;
-        match rate_provider::get(self.provider_type, currency) {
+        match rate_provider::get(self.provider, currency) {
             Ok(rate) => {
                 let last_rate = self.time_series.last().cloned();
                 self.time_series.push(rate.clone());
@@ -102,6 +104,7 @@ impl<'a, T: MediumTrait + Debug> RatePrinter<'a, T> {
             util::str_pad(&rate.price_usd.to_string(), 10, ' '),
             util::str_pad(&rate.price_eur.to_string(), 10, ' ')
         );
+
         let col_left_visible_width = col_1.chars().count()
             + 1
             + trend::get_trend_sign(&rate, last_rate, false).chars().count()
@@ -109,16 +112,34 @@ impl<'a, T: MediumTrait + Debug> RatePrinter<'a, T> {
             + col_3.chars().count()
             + 1;
 
+        let mut footer = format!("{} {} {}", col_1, col_2, col_3);
+
+        let col_4 = match self.value {
+            Some(value) => {
+                format!(
+                    "| {} ≈ €{}",
+                    value.to_string(),
+                    util::str_pad(&format!("{}", value * rate.price_eur), 10, ' '),
+                )
+            }
+            None => "".to_string(),
+        };
+
+
         let space_left = self.chart.width() as isize - col_left_visible_width as isize;
-
-        let provider_name = rate_provider::get_name(self.provider_type).unwrap_or("");
-        let col_4 = format!("[{}]", provider_name);
-
         if space_left >= (col_4.chars().count() as isize) {
-            format!("{} {} {} {}", col_1, col_2, col_3, util::str_left_pad(&format!("[{}]", provider_name), space_left as usize, ' '))
-        } else {
-            format!("{} {} {}", col_1, col_2, col_3)
+            footer.push_str(&col_4);
         }
+
+        let space_left = space_left - 1 - col_4.chars().count() as isize;
+        let provider_name = rate_provider::get_name(self.provider).unwrap_or("");
+        let col_5 = format!("[{}]", provider_name);
+
+        if space_left >= (col_5.chars().count() as isize) {
+            footer.push_str(&util::str_left_pad(&format!("[{}]", provider_name), space_left as usize, ' '))
+        }
+
+        footer
     }
 
     fn get_header(&self, _: &rate::Rate, _: &Option<rate::Rate>) -> String {

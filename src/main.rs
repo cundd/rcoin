@@ -115,6 +115,13 @@ fn get_provider(matches: &ArgMatches) -> String {
     }
 }
 
+fn get_value(matches: &ArgMatches) -> Option<f32> {
+    match matches.value_of("VALUE") {
+        Some(arg) => arg.parse::<f32>().ok(),
+        None => None,
+    }
+}
+
 fn get_currency(matches: &ArgMatches) -> rate::Currency {
     let input = matches.value_of("CURRENCY").unwrap();
     if let Some(c) = rate::Currency::new(input) {
@@ -139,6 +146,9 @@ fn main() {
             .help("Sets the currency to monitor")
             .required(true)
             .index(1))
+        .arg(Arg::with_name("VALUE")
+            .help("Coin value to convert")
+            .index(2))
         .arg(Arg::with_name("mode")
             .long("mode")
             .short("m")
@@ -187,6 +197,7 @@ fn main() {
     let interval = time::Duration::from_millis(get_interval(&matches) / 5);
     let fill = get_chart_point(&matches);
     let space = get_chart_fill(&matches);
+    let value = get_value(&matches);
     let provider = get_provider(&matches);
     let currency = get_currency(&matches);
 
@@ -199,7 +210,7 @@ fn main() {
     );
 
     let screen = Screen::default().unwrap();
-    let mut printer = rate_printer::RatePrinter::new(screen, chart, &provider, &fill, &space, get_history_size(&matches));
+    let mut printer = rate_printer::RatePrinter::new(screen, chart, value, &provider, &fill, &space, get_history_size(&matches));
     let mut run_number = 0;
     let mut error: Option<self::ui::Error> = None;
     term_style::cursor::hide_cursor();
