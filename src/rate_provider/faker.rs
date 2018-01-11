@@ -31,6 +31,11 @@ impl RateProvider for Faker {
                 currency,
                 Range::new(150.0f32, 360.0f32).ind_sample(&mut rng),
                 Range::new(128.0f32, 306.0f32).ind_sample(&mut rng),
+            ),
+            Currency::Ripple => rate::Rate::new(
+                currency,
+                Range::new(2.21f32, 3.40f32).ind_sample(&mut rng),
+                Range::new(1.84f32, 2.82f32).ind_sample(&mut rng),
             )
         })
     }

@@ -3,6 +3,7 @@ pub enum Currency {
     Bitcoin,
     Ethereum,
     Litecoin,
+    Ripple,
 }
 
 impl Currency {
@@ -11,6 +12,7 @@ impl Currency {
             "bitcoin" | "btc" => Some(Currency::Bitcoin),
             "ethereum" | "eth" => Some(Currency::Ethereum),
             "litecoin" | "ltc" => Some(Currency::Litecoin),
+            "ripple" | "xrp" => Some(Currency::Ripple),
             _ => None
         }
     }
@@ -20,6 +22,7 @@ impl Currency {
             &Currency::Bitcoin => "Bitcoin",
             &Currency::Ethereum => "Ethereum",
             &Currency::Litecoin => "Litecoin",
+            &Currency::Ripple => "Ripple",
         }
     }
 
@@ -28,6 +31,7 @@ impl Currency {
             &Currency::Bitcoin => "BTC",
             &Currency::Ethereum => "ETH",
             &Currency::Litecoin => "LTC",
+            &Currency::Ripple => "XRP",
         }
     }
 }
@@ -57,6 +61,12 @@ mod tests {
         assert_eq!(Currency::Litecoin, Currency::new("litecoin").unwrap());
         assert_eq!(Currency::Litecoin, Currency::new("LTC").unwrap());
         assert_eq!(Currency::Litecoin, Currency::new("ltc").unwrap());
+
+        assert_eq!(Currency::Ripple, Currency::new("RIPPLE").unwrap());
+        assert_eq!(Currency::Ripple, Currency::new("Ripple").unwrap());
+        assert_eq!(Currency::Ripple, Currency::new("RIPPLE").unwrap());
+        assert_eq!(Currency::Ripple, Currency::new("XRP").unwrap());
+        assert_eq!(Currency::Ripple, Currency::new("xrp").unwrap());
     }
 
     #[test]
@@ -64,6 +74,7 @@ mod tests {
         assert_eq!("Bitcoin", Currency::Bitcoin.name());
         assert_eq!("Ethereum", Currency::Ethereum.name());
         assert_eq!("Litecoin", Currency::Litecoin.name());
+        assert_eq!("Ripple", Currency::Ripple.name());
     }
 
     #[test]
@@ -71,5 +82,6 @@ mod tests {
         assert_eq!("BTC", Currency::Bitcoin.symbol());
         assert_eq!("ETH", Currency::Ethereum.symbol());
         assert_eq!("LTC", Currency::Litecoin.symbol());
+        assert_eq!("XRP", Currency::Ripple.symbol());
     }
 }
