@@ -5,6 +5,7 @@ use matrix::PointTrait;
 use super::screen_buffer::ScreenBuffer;
 use super::pixel::CoordinatePrecision;
 use super::pixel::Pixel;
+use super::pixel_sequence::*;
 use super::style::*;
 use super::medium;
 use super::medium::MediumTrait;
@@ -107,43 +108,32 @@ impl<T: MediumTrait + Debug> Screen<T> {
         let mut current_x = point.x();
         let mut current_y = point.y();
         let mut index = 0;
-        let mut chars: Vec<char> = text.chars().collect();
+        let mut chars = PixelSequence::from_str(text);
         let mut style = Styles::normal();
 
-        while let Some(character) = chars.get(index) {
+        while let Some(pixel) = chars.get(index) {
             if auto_wrap {
                 // If the maximum x for this line is reached, set the coordinates to a new row
                 if current_x >= self.buffer.width() {
                     current_y += 1;
                     current_x = 0;
 
-                    if *character == '\n' {
+                    if pixel.character == '\n' {
                         index += 1;
                         continue;
                     }
                 }
             }
 
-            match *character {
-                '\n' => {
-                    current_y += 1;
-                    current_x = 0;
-                    index += 1;
+            if pixel.character == '\n' {
+                current_y += 1;
+                current_x = 0;
+                index += 1;
 
-                    continue;
-                }
-                character @ _ if character.is_control() => {
-                    let (offset, new_style) = Self::consume_control_sequence(text, index);
-                    style = new_style;
-                    index += offset;
-                }
-                character @ _ => {
-                    let pixel = Pixel::with_point_and_styles(character, &point.with_x_y(current_x, current_y), style);
-                    self.buffer.draw_pixel(pixel)?;
-                    current_x += 1;
-                }
+                continue;
             }
-
+            self.buffer.draw_pixel(pixel.with_x_y(current_x, current_y))?;
+            current_x += 1;
             index += 1;
         }
 

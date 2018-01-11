@@ -10,6 +10,8 @@ use matrix;
 use ui::Error;
 use ui::Screen;
 use ui::CoordinatePrecision;
+use ui::PixelSequenceTrait;
+use ui::PixelSequence;
 use ui::medium::MediumTrait;
 use point::Point;
 
@@ -105,13 +107,6 @@ impl<'a, T: MediumTrait + Debug> RatePrinter<'a, T> {
             util::str_pad(&rate.price_eur.to_string(), 10, ' ')
         );
 
-        let col_left_visible_width = col_1.chars().count()
-            + 1
-            + trend::get_trend_sign(&rate, last_rate, false).chars().count()
-            + 1
-            + col_3.chars().count()
-            + 1;
-
         let mut footer = format!("{} {} {}", col_1, col_2, col_3);
 
         let col_4 = match self.value {
@@ -125,8 +120,7 @@ impl<'a, T: MediumTrait + Debug> RatePrinter<'a, T> {
             None => "".to_string(),
         };
 
-
-        let space_left = self.chart.width() as isize - col_left_visible_width as isize;
+        let space_left = self.chart.width() as isize - PixelSequence::from_str(&footer).len() as isize;
         if space_left >= (col_4.chars().count() as isize) {
             footer.push_str(&col_4);
         }

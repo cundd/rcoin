@@ -155,9 +155,11 @@ impl ScreenBuffer {
 
     fn check_point_bounds<T: PointTrait>(&self, point: &T) -> Result<(), Error> {
         if self.size.width == 0 || point.x() > self.size.width - 1 {
+//      eprintln!("{}",ui_error!(SizeError, "The point's `x` coordinate ({}) is bigger than the screen's width ({})", point.x(), self.size.width));
             return Err(ui_error!(SizeError, "The point's `x` coordinate ({}) is bigger than the screen's width ({})", point.x(), self.size.width));
         }
         if self.size.height == 0 || point.y() > self.size.height - 1 {
+//            eprintln!("{}",ui_error!(SizeError, "The point's `y` coordinate ({}) is bigger than the screen's height ({})", point.y(), self.size.height));
             return Err(ui_error!(SizeError, "The point's `y` coordinate ({}) is bigger than the screen's height ({})", point.y(), self.size.height));
         }
 
