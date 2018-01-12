@@ -19,6 +19,7 @@ mod matrix;
 mod ui;
 mod rate_printer;
 mod point;
+mod signal_handler;
 
 use std::{thread, time};
 use clap::{App, Arg, ArgMatches};
@@ -137,6 +138,16 @@ fn get_all_providers() -> String {
         .join(", ")
 }
 
+
+fn exit() {
+    term_style::cursor::show_cursor();
+    ::std::process::exit(1);
+}
+
+extern fn received_signal(_: i32) {
+    exit();
+}
+
 fn main() {
     let matches = App::new("rcoin")
         .version("1.0")
@@ -193,6 +204,7 @@ fn main() {
     keyboard_listener.add_listener('q', |_| {
         return true;
     });
+    signal_handler::register(signal_handler::Signal::SIGINT, received_signal);
 
     let interval = time::Duration::from_millis(get_interval(&matches) / 5);
     let fill = get_chart_point(&matches);
@@ -231,10 +243,11 @@ fn main() {
         thread::sleep(interval);
     }
 
-    term_style::cursor::show_cursor();
-
     if let Some(error) = error {
+        term_style::cursor::show_cursor();
         error!("{}", error);
     }
+
+    exit();
 }
 
