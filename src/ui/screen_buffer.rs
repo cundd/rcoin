@@ -27,6 +27,9 @@ impl ScreenBuffer {
         Self::new(size, Pixel::placeholder(0, 0))
     }
 
+    pub fn size(&self) -> Size {
+        self.size
+    }
     pub fn width(&self) -> CoordinatePrecision {
         self.size.width
     }

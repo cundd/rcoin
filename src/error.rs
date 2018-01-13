@@ -1,4 +1,8 @@
+use term_style;
+
 pub fn _error(message: &str) -> ! {
+    term_style::cursor::show_cursor();
+
     #[cfg(debug_assertions)]
         panic!("{}", message);
 

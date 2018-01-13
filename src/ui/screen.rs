@@ -1,4 +1,3 @@
-use term_size;
 use std::fmt;
 use std::fmt::Debug;
 use matrix::PointTrait;
@@ -15,13 +14,6 @@ use super::error::Error;
 pub const DEFAULT_WIDTH: CoordinatePrecision = 30;
 pub const DEFAULT_HEIGHT: CoordinatePrecision = 10;
 
-fn get_screen_size() -> Option<Size> {
-    match term_size::dimensions() {
-        Some((width, height)) => Some(Size::new(width as CoordinatePrecision, height as CoordinatePrecision)),
-        None => Some(Size::new(DEFAULT_WIDTH, DEFAULT_HEIGHT)),
-    }
-}
-
 #[derive(Debug)]
 pub struct Screen<T: MediumTrait + Debug> {
     buffer: ScreenBuffer,
@@ -33,6 +25,10 @@ impl<T: MediumTrait + Debug> Screen<T> {
     pub fn new(size: Size, fill_pixel: Pixel, medium: T) -> Result<Self, Error> {
         let buffer = ScreenBuffer::new(size, fill_pixel)?;
         Ok(Screen { buffer, medium })
+    }
+
+    pub fn size(&self) -> Size {
+        self.buffer.size()
     }
 
     /// Insert the text at the given point
@@ -172,7 +168,8 @@ impl<T: MediumTrait + Debug> Screen<T> {
 #[allow(unused)]
 impl Screen<medium::Terminal> {
     pub fn default() -> Result<Self, Error> {
-        Self::new(get_screen_size().unwrap(), Pixel::placeholder(0, 0), medium::default())
+        let size = Size::auto()?;
+        Self::new(size, Pixel::placeholder(0, 0), medium::default())
     }
 
     pub fn with_size(size: Size) -> Result<Self, Error> {

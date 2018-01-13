@@ -9,15 +9,16 @@ use rate_provider;
 use matrix;
 use ui::Error;
 use ui::Screen;
+use ui::Size;
 use ui::CoordinatePrecision;
 use ui::PixelSequenceTrait;
 use ui::PixelSequence;
-use ui::medium::MediumTrait;
+use ui::medium::*;
 use point::Point;
 
 mod trend;
 
-pub struct RatePrinter<'a, T: MediumTrait + Debug> {
+pub struct RatePrinter<'a> {
     value: Option<f32>,
     fill: &'a str,
     space: &'a str,
@@ -25,13 +26,14 @@ pub struct RatePrinter<'a, T: MediumTrait + Debug> {
     time_series: rate::RateSeries,
     chart: Chart,
     run_number: usize,
-    screen: Screen<T>,
+    screen: Screen<Terminal>,
 }
 
-impl<'a, T: MediumTrait + Debug> RatePrinter<'a, T> {
-    pub fn new(screen: Screen<T>, chart: Chart, value: Option<f32>, provider: &'a str, fill: &'a str, space: &'a str, history_size: Option<usize>) -> Self {
+impl<'a> RatePrinter<'a> {
+    pub fn new(chart: Chart, value: Option<f32>, provider: &'a str, fill: &'a str, space: &'a str, history_size: Option<usize>) -> Result<Self, Error> {
         let time_series = build_time_series(&chart, history_size);
-        RatePrinter {
+        let screen = Screen::default()?;
+        Ok(RatePrinter {
             space,
             fill,
             value,
@@ -40,7 +42,7 @@ impl<'a, T: MediumTrait + Debug> RatePrinter<'a, T> {
             time_series,
             screen,
             run_number: 0,
-        }
+        })
     }
 
     pub fn get_and_print_rates(&mut self, currency: rate::Currency) -> Result<rate::Rate, Error> {
@@ -57,8 +59,9 @@ impl<'a, T: MediumTrait + Debug> RatePrinter<'a, T> {
                     self.get_footer(&rate, &last_rate),
                 );
 
-                self.screen.draw_multi_line_text(&Point::new(0, 0), &output)?;
-                self.screen.flush()?;
+                let screen = self.get_screen();
+                screen.draw_multi_line_text(&Point::new(0, 0), &output)?;
+                screen.flush()?;
 
                 Ok(rate)
             }
@@ -160,6 +163,18 @@ impl<'a, T: MediumTrait + Debug> RatePrinter<'a, T> {
             }
             None => self.space.to_string(),
         }
+    }
+
+    /// Return the `Screen` for this run
+    ///
+    /// If the terminal size did not change since the previous run, the last `Screen` will be reused
+    fn get_screen(&mut self) -> &mut Screen<Terminal> {
+        if self.screen.size() == Size::auto().unwrap() {
+            return &mut self.screen;
+        }
+        self.screen = Screen::default().unwrap();
+
+        &mut self.screen
     }
 }
 

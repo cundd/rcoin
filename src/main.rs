@@ -23,7 +23,7 @@ mod signal_handler;
 
 use std::{thread, time};
 use clap::{App, Arg, ArgMatches};
-use ui::{CoordinatePrecision, Screen};
+use ui::CoordinatePrecision;
 use rate_provider::*;
 
 fn get_mode(matches: &ArgMatches) -> chart::Mode {
@@ -221,8 +221,10 @@ fn main() {
         get_mode(&matches),
     );
 
-    let screen = Screen::default().unwrap();
-    let mut printer = rate_printer::RatePrinter::new(screen, chart, value, &provider, &fill, &space, get_history_size(&matches));
+    let mut printer = match rate_printer::RatePrinter::new(chart, value, &provider, &fill, &space, get_history_size(&matches)) {
+        Ok(p) => p,
+        Err(error) => error!("{}", error),
+    };
     let mut run_number = 0;
     let mut error: Option<self::ui::Error> = None;
     term_style::cursor::hide_cursor();
@@ -244,7 +246,6 @@ fn main() {
     }
 
     if let Some(error) = error {
-        term_style::cursor::show_cursor();
         error!("{}", error);
     }
 
