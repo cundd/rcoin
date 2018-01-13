@@ -2,8 +2,9 @@ use std::fmt;
 use std::fmt::Debug;
 use matrix::PointTrait;
 use super::screen_buffer::ScreenBuffer;
-use super::pixel::CoordinatePrecision;
 use super::pixel::Pixel;
+use super::pixel::CoordinatePrecision;
+use super::element::Element;
 use super::pixel_sequence::*;
 use super::style::*;
 use super::medium;
@@ -22,8 +23,8 @@ pub struct Screen<T: MediumTrait + Debug> {
 
 #[allow(unused)]
 impl<T: MediumTrait + Debug> Screen<T> {
-    pub fn new(size: Size, fill_pixel: Pixel, medium: T) -> Result<Self, Error> {
-        let buffer = ScreenBuffer::new(size, fill_pixel)?;
+    pub fn new(size: Size, fill_element: Element, medium: T) -> Result<Self, Error> {
+        let buffer = ScreenBuffer::new(size, fill_element)?;
         Ok(Screen { buffer, medium })
     }
 
@@ -57,7 +58,8 @@ impl<T: MediumTrait + Debug> Screen<T> {
                     index += offset;
                 }
                 character @ _ => {
-                    let pixel = Pixel::with_point_and_styles(character, &point.with_x(current_x), styles);
+                    let element = Element::new(character, styles);
+                    let pixel = Pixel::with_element_and_point(element, &point.with_x(current_x));
                     self.buffer.draw_pixel(pixel)?
                 }
             }
@@ -114,14 +116,14 @@ impl<T: MediumTrait + Debug> Screen<T> {
                     current_y += 1;
                     current_x = 0;
 
-                    if pixel.character == '\n' {
+                    if pixel.character() == '\n' {
                         index += 1;
                         continue;
                     }
                 }
             }
 
-            if pixel.character == '\n' {
+            if pixel.character() == '\n' {
                 current_y += 1;
                 current_x = 0;
                 index += 1;
@@ -169,15 +171,15 @@ impl<T: MediumTrait + Debug> Screen<T> {
 impl Screen<medium::Terminal> {
     pub fn default() -> Result<Self, Error> {
         let size = Size::auto()?;
-        Self::new(size, Pixel::placeholder(0, 0), medium::default())
+        Self::new(size, Element::blank(), medium::default())
     }
 
     pub fn with_size(size: Size) -> Result<Self, Error> {
-        Self::new(size, Pixel::placeholder(0, 0), medium::default())
+        Self::new(size, Element::blank(), medium::default())
     }
 
-    pub fn with_size_and_fill_pixel(size: Size, fill_pixel: Pixel) -> Result<Self, Error> {
-        Self::new(size, fill_pixel, medium::default())
+    pub fn with_size_and_fill_pixel(size: Size, fill_element: Element) -> Result<Self, Error> {
+        Self::new(size, fill_element, medium::default())
     }
 }
 
@@ -198,7 +200,7 @@ mod test {
         let screen = Screen::with_size(Size::new(10, 5)).unwrap();
         assert_eq!("          \n          \n          \n          \n          \n", screen.get_contents());
 
-        let screen = Screen::with_size_and_fill_pixel(Size::new(10, 5), Pixel::placeholder_with_character(0, 0, '.')).unwrap();
+        let screen = Screen::with_size_and_fill_pixel(Size::new(10, 5), Element::normal('.')).unwrap();
         assert_eq!(r"..........
 ..........
 ..........

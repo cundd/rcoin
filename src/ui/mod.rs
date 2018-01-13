@@ -3,6 +3,7 @@ pub mod draw;
 mod error;
 mod size;
 mod style;
+mod element;
 mod pixel;
 mod pixel_sequence;
 mod screen_buffer;
@@ -11,8 +12,9 @@ pub mod screen;
 pub mod medium;
 
 pub use self::size::Size;
-pub use self::pixel::Pixel;
+pub use self::element::Element;
 pub use self::pixel::CoordinatePrecision;
+pub use self::pixel::Pixel;
 pub use self::pixel_sequence::PixelSequenceTrait;
 pub use self::pixel_sequence::PixelSequence;
 pub use self::screen::Screen;

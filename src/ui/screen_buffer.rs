@@ -1,6 +1,7 @@
 use point::Point;
 use matrix::PointTrait;
 use super::size::Size;
+use super::element::Element;
 use super::pixel::Pixel;
 use super::pixel::CoordinatePrecision;
 use super::error::*;
@@ -11,25 +12,29 @@ use super::style::*;
 pub struct ScreenBuffer {
     size: Size,
     buffer: Vec<Pixel>,
-    blank_pixel: Pixel,
+    blank_element: Element,
 }
 
-#[allow(unused)]
+//#[allow(unused)]
 impl ScreenBuffer {
-    pub fn new(size: Size, blank_pixel: Pixel) -> Result<Self, Error> {
+    /// Build a new buffer for the given screen size using the `blank_element` for the spaces
+    pub fn new(size: Size, blank_element: Element) -> Result<Self, Error> {
         Self::check_size(&size)?;
 
         let buffer = Vec::with_capacity(size.width as usize * size.height as usize);
-        Ok(ScreenBuffer { size, buffer, blank_pixel })
+        Ok(ScreenBuffer { size, buffer, blank_element })
     }
 
+    /// Build a new buffer for the given screen size
+    #[allow(unused)]
     pub fn with_size(size: Size) -> Result<Self, Error> {
-        Self::new(size, Pixel::placeholder(0, 0))
+        Self::new(size, Element::blank())
     }
 
     pub fn size(&self) -> Size {
         self.size
     }
+
     pub fn width(&self) -> CoordinatePrecision {
         self.size.width
     }
@@ -38,6 +43,7 @@ impl ScreenBuffer {
         self.size.height
     }
 
+    #[allow(unused)]
     pub fn clear(&mut self) {
         self.buffer.clear();
     }
@@ -45,7 +51,7 @@ impl ScreenBuffer {
     pub fn draw_pixel(&mut self, pixel: Pixel) -> Result<(), Error> {
         let index = match self.get_index_for_point(&pixel) {
             Ok(i) => i,
-            Err(e) => return Err(ui_error!(SizeError,"{} for character '{}'", e.to_string(), pixel.character))
+            Err(e) => return Err(ui_error!(SizeError,"{} for character '{}'", e.to_string(), pixel.character()))
         };
         if self.buffer.len() <= index {
             self.fill_buffer_up_to(index);
@@ -57,39 +63,27 @@ impl ScreenBuffer {
         Ok(())
     }
 
+    #[allow(unused)]
     pub fn draw_point<T: PointTrait>(&mut self, point: &T, content: char) -> Result<(), Error> {
-        if point.x() as usize > CoordinatePrecision::max_value() as usize {
-            return Err(ui_error!(SizeError,"The point's `x` coordinate ({}) exceeds the maximum Pixel `x` ({}) for character '{}'", point.x(), CoordinatePrecision::max_value(), content));
-        }
-        if point.y() as usize > CoordinatePrecision::max_value() as usize {
-            return Err(ui_error!(SizeError,"The point's `y` coordinate ({}) exceeds the maximum Pixel `y` ({}) for character '{}'", point.y(), CoordinatePrecision::max_value(), content));
-        }
-
-        let x = point.x() as CoordinatePrecision;
-        let y = point.y() as CoordinatePrecision;
-
-        self.draw_pixel(Pixel::normal(content, x, y))
+        self.draw_pixel(Pixel::normal(content, point.x(), point.y()))
     }
 
     pub fn get_pixel_at_point<T: PointTrait>(&self, point: &T) -> Result<Pixel, Error> {
         let index = self.get_index_for_point(point)?;
         match self.get_pixel_at_index(index) {
-            Some(c) => Ok(Pixel::new(c.character, c.x, c.y, c.styles)),
-            None => Ok(self.blank_pixel.clone()),
+            Some(c) => Ok(c.clone()),
+            None => Ok(Pixel::with_element_and_point(self.blank_element, point)),
         }
     }
 
+    #[allow(unused)]
     pub fn get_content_at_point<T: PointTrait>(&self, point: &T) -> Result<char, Error> {
         let pixel = self.get_pixel_at_point(point)?;
 
-        Ok(pixel.character)
+        Ok(pixel.character())
     }
 
-    pub fn get_content_at(&self, x: CoordinatePrecision, y: CoordinatePrecision) -> Result<char, Error> {
-        let pixel = self.get_pixel_at(x, y)?;
-
-        Ok(pixel.character)
-    }
+    #[allow(unused)]
     pub fn get_pixel_at(&self, x: CoordinatePrecision, y: CoordinatePrecision) -> Result<Pixel, Error> {
         let pixel = self.get_pixel_at_point(&Point::new(x, y))?;
 
@@ -106,6 +100,7 @@ impl ScreenBuffer {
     }
 
     /// Return the index of the last Point in the buffer
+    #[allow(unused)]
     fn last_index(&self) -> Option<usize> {
         match self.buffer.last() {
             Some(pixel) => match self.get_index_for_point(pixel) {
@@ -117,6 +112,7 @@ impl ScreenBuffer {
     }
 
     /// Returns the index of the last possible Point
+    #[allow(unused)]
     fn max_index(&self) -> usize {
         (self.size.width * self.size.height) as usize
     }
@@ -150,7 +146,7 @@ impl ScreenBuffer {
 
             let x = x_raw as CoordinatePrecision;
 
-            self.buffer.push(Pixel::placeholder(x, y));
+            self.buffer.push(Pixel::new(self.blank_element, x, y));
 
             index += 1;
         }
@@ -182,11 +178,11 @@ impl ScreenBuffer {
 
 #[inline]
 fn wrap_pixel(pixel: &Pixel) -> String {
-    if pixel.styles == Styles::normal() {
-        return pixel.character.to_string();
+    if pixel.styles() == Styles::normal() {
+        return pixel.character().to_string();
     }
 
-    style::wrap(pixel.character, pixel.styles)
+    style::wrap(pixel.character(), pixel.styles())
 }
 
 fn build_contents(buffer: &ScreenBuffer, with_colors: bool) -> String {
@@ -205,7 +201,7 @@ fn build_contents(buffer: &ScreenBuffer, with_colors: bool) -> String {
             if with_colors {
                 output.push_str(&wrap_pixel(&pixel));
             } else {
-                output.push(pixel.character);
+                output.push(pixel.character());
             }
 
             current_index += 1;

@@ -1,4 +1,5 @@
 use super::pixel::Pixel;
+use super::element::Element;
 use super::style::*;
 
 pub type PixelSequence = Vec<Pixel>;
@@ -19,7 +20,8 @@ impl PixelSequenceTrait for PixelSequence {
         while let Some(character) = chars.get(index) {
             match *character {
                 '\n' => {
-                    sequence.push(Pixel::new('\n', current_x, current_y, style));
+                    let element = Element::new('\n', style);
+                    sequence.push(Pixel::new(element, current_x, current_y));
                     current_y += 1;
                     current_x = 0;
                     index += 1;
@@ -32,7 +34,8 @@ impl PixelSequenceTrait for PixelSequence {
                     index += offset;
                 }
                 character @ _ => {
-                    sequence.push(Pixel::new(character, current_x, current_y, style));
+                    let element = Element::new(character, style);
+                    sequence.push(Pixel::new(element, current_x, current_y));
                     current_x += 1;
                 }
             }
