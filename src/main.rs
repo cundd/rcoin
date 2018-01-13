@@ -19,10 +19,11 @@ mod matrix;
 mod ui;
 mod rate_printer;
 mod point;
+mod signal_handler;
 
 use std::{thread, time};
 use clap::{App, Arg, ArgMatches};
-use ui::{CoordinatePrecision, Screen};
+use ui::CoordinatePrecision;
 use rate_provider::*;
 
 fn get_mode(matches: &ArgMatches) -> chart::Mode {
@@ -137,6 +138,16 @@ fn get_all_providers() -> String {
         .join(", ")
 }
 
+
+fn exit() {
+    term_style::cursor::show_cursor();
+    ::std::process::exit(1);
+}
+
+extern fn received_signal(_: i32) {
+    exit();
+}
+
 fn main() {
     let matches = App::new("rcoin")
         .version("1.0")
@@ -193,6 +204,7 @@ fn main() {
     keyboard_listener.add_listener('q', |_| {
         return true;
     });
+    signal_handler::register(signal_handler::Signal::SIGINT, received_signal);
 
     let interval = time::Duration::from_millis(get_interval(&matches) / 5);
     let fill = get_chart_point(&matches);
@@ -209,8 +221,10 @@ fn main() {
         get_mode(&matches),
     );
 
-    let screen = Screen::default().unwrap();
-    let mut printer = rate_printer::RatePrinter::new(screen, chart, value, &provider, &fill, &space, get_history_size(&matches));
+    let mut printer = match rate_printer::RatePrinter::new(chart, value, &provider, &fill, &space, get_history_size(&matches)) {
+        Ok(p) => p,
+        Err(error) => error!("{}", error),
+    };
     let mut run_number = 0;
     let mut error: Option<self::ui::Error> = None;
     term_style::cursor::hide_cursor();
@@ -231,10 +245,10 @@ fn main() {
         thread::sleep(interval);
     }
 
-    term_style::cursor::show_cursor();
-
     if let Some(error) = error {
         error!("{}", error);
     }
+
+    exit();
 }
 

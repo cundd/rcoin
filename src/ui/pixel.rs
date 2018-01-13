@@ -1,55 +1,62 @@
 use matrix::PointTrait;
 use super::style::*;
+use super::element::Element;
 
 pub type CoordinatePrecision = u16;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Pixel {
-    pub x: CoordinatePrecision,
-    pub y: CoordinatePrecision,
-    pub character: char,
-    pub styles: Styles,
-    pub placeholder: bool,
+    x: CoordinatePrecision,
+    y: CoordinatePrecision,
+    element: Element,
+    placeholder: bool,
 }
 
 #[allow(unused)]
 impl Pixel {
-    pub fn new(character: char, x: CoordinatePrecision, y: CoordinatePrecision, styles: Styles) -> Self {
+    pub fn new(element: Element, x: CoordinatePrecision, y: CoordinatePrecision) -> Self {
         Pixel {
+            element,
             x,
             y,
-            character,
-            styles,
             placeholder: false,
         }
     }
-
-    pub fn with_point<T: PointTrait>(character: char, point: &T) -> Self {
-        Self::with_point_and_styles(character, point, Styles::normal())
+    pub fn with_element_and_point<T: PointTrait>(element: Element, point: &T) -> Self {
+        Pixel::new(
+            element,
+            point.x(),
+             point.y(),
+        )
     }
 
-    pub fn with_point_and_styles<T: PointTrait>(character: char, point: &T, styles: Styles) -> Self {
-        Self::new(character, point.x(), point.y(), styles)
+    pub fn normal_with_point<T: PointTrait>(character: char, point: &T) -> Self {
+        Self::normal(character, point.x(), point.y())
     }
 
     pub fn normal(character: char, x: CoordinatePrecision, y: CoordinatePrecision) -> Self {
-        Self::new(character, x, y, Styles::normal())
+        Self::new(Element::normal(character), x, y)
     }
 
     pub fn placeholder(x: CoordinatePrecision, y: CoordinatePrecision) -> Self {
-        Pixel { x, y, character: ' ', styles: Styles::normal(), placeholder: true }
+        Pixel { x, y, element: Element::blank(), placeholder: true }
     }
 
-    pub fn placeholder_with_character(x: CoordinatePrecision, y: CoordinatePrecision, character: char) -> Self {
-        Pixel { x, y, character, styles: Styles::normal(), placeholder: true }
-    }
 
     pub fn blank(x: CoordinatePrecision, y: CoordinatePrecision) -> Self {
-        Pixel { x, y, character: ' ', styles: Styles::normal(), placeholder: true }
+        Pixel { x, y, element: Element::blank(), placeholder: true }
     }
 
     pub fn blank_with_point<T: PointTrait>(point: &T) -> Self {
         Self::blank(point.x() as CoordinatePrecision, point.y() as CoordinatePrecision)
+    }
+
+    pub fn character(&self) -> char {
+        self.element.character
+    }
+
+    pub fn styles(&self) -> Styles {
+        self.element.styles
     }
 
     fn check_coordinate_precision(coordinate: usize) {
@@ -103,8 +110,7 @@ mod test {
             Pixel {
                 x: 1,
                 y: 2,
-                character: 'c',
-                styles: Styles::normal(),
+                element: Element::normal('c'),
                 placeholder: false,
             },
             Pixel::normal('c', 1, 2)
@@ -117,8 +123,7 @@ mod test {
             Pixel {
                 x: 1,
                 y: 2,
-                character: ' ',
-                styles: Styles::normal(),
+                element: Element::blank(),
                 placeholder: true,
             },
             Pixel::blank(1, 2)
@@ -132,8 +137,7 @@ mod test {
             Pixel {
                 x: 1,
                 y: 2,
-                character: ' ',
-                styles: Styles::normal(),
+                element: Element::blank(),
                 placeholder: true,
             },
             Pixel::blank_with_point(&Point::new(1, 2))
