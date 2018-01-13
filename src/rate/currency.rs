@@ -34,6 +34,15 @@ impl Currency {
             &Currency::Ripple => "XRP",
         }
     }
+
+    pub fn scale(&self) -> f32 {
+        match self {
+            &Currency::Bitcoin => 1.0,
+            &Currency::Ethereum => 10.0,
+            &Currency::Litecoin => 10.0,
+            &Currency::Ripple => 100.0,
+        }
+    }
 }
 
 

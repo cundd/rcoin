@@ -73,7 +73,11 @@ impl<'a> RatePrinter<'a> {
             Some(row) => {
                 let (_, rate) = row.iter().next().expect(&format!("No items found in row at {}", row_number));
 
-                format!("{} |", rate::Rate::price_to_coordinate(rate.price_usd))
+                if rate.currency.scale() > 1.0 {
+                    format!("{:.*} |", 2, rate.price_usd)
+                } else {
+                    format!("{} |", rate.price_usd.round())
+                }
             }
             None => "|".to_string(),
         };

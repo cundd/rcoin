@@ -25,12 +25,16 @@ impl Rate {
             price_usd: price_usd.clone(),
             price_eur: price_eur.clone(),
             x: 0,
-            y: Self::price_to_coordinate(price_usd),
+            y: Self::price_to_coordinate_scaled(price_usd, &currency),
         }
     }
 
     pub fn price_to_coordinate(price: f32) -> CoordinatePrecision {
         price.round() as CoordinatePrecision
+    }
+
+    fn price_to_coordinate_scaled(price: f32, currency: &Currency) -> CoordinatePrecision {
+        (price * currency.scale()).round() as CoordinatePrecision
     }
 }
 

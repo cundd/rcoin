@@ -217,7 +217,7 @@ fn main() {
         get_chart_width(&matches),
         get_chart_height(&matches),
         0,
-        7,
+        10,
         get_mode(&matches),
     );
 
