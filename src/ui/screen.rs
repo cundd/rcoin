@@ -143,7 +143,8 @@ impl<T: MediumTrait + Debug> Screen<T> {
     }
 
     pub fn flush(&self) -> Result<(), Error> {
-        self.medium.draw(&self.buffer.get_contents())
+        self.medium.draw(&self.buffer.get_contents())?;
+        self.medium.flush()
     }
 
     #[inline]

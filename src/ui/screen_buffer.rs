@@ -207,8 +207,11 @@ fn build_contents(buffer: &ScreenBuffer, with_colors: bool) -> String {
             current_index += 1;
             x += 1;
         }
-        output.push('\n');
         y += 1;
+
+        if y != height {
+            output.push('\n');
+        }
     }
 
     output

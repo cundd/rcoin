@@ -15,8 +15,6 @@ impl Terminal {
 impl MediumTrait for Terminal {
     fn draw(&self, output: &str) -> Result<(), Error> {
         let mut buffer = String::with_capacity(output.len() + 6);
-//        println!();
-
         // Clear the screen
 //        print!("{}[2J", 27 as char);
 
@@ -25,6 +23,8 @@ impl MediumTrait for Terminal {
         buffer.push_str("[0;0H");
 
         buffer.push_str(output);
+        buffer.shrink_to_fit();
+
         print!("{}", buffer);
 
         Ok(())
