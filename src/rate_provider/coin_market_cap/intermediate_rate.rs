@@ -1,5 +1,3 @@
-//use std::collections::Vec;
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct IntermediateRate {
     //": "bitcoin",

@@ -5,6 +5,7 @@ mod coin_market_cap;
 mod coin_desk;
 mod blockchain_info;
 mod crypto_compare;
+mod cryptonator;
 mod provider_error;
 
 use std::time::SystemTime;
