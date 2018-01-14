@@ -199,15 +199,14 @@ mod test {
     #[test]
     fn get_contents_test() {
         let screen = Screen::with_size(Size::new(10, 5)).unwrap();
-        assert_eq!("          \n          \n          \n          \n          \n", screen.get_contents());
+        assert_eq!("          \n          \n          \n          \n          ", screen.get_contents());
 
         let screen = Screen::with_size_and_fill_pixel(Size::new(10, 5), Element::normal('.')).unwrap();
         assert_eq!(r"..........
 ..........
 ..........
 ..........
-..........
-", screen.get_contents());
+..........", screen.get_contents());
     }
 
     #[test]
@@ -216,16 +215,16 @@ mod test {
 
         let result = screen.draw_text(&Point::new(1, 2), "hello");
         assert!(result.is_ok(), "{}", result.unwrap_err());
-        assert_eq!("          \n          \n hello    \n          \n          \n", screen.get_contents());
+        assert_eq!("          \n          \n hello    \n          \n          ", screen.get_contents());
 
         let mut screen = Screen::with_size(Size::new(10, 5)).unwrap();
         assert!(screen.draw_text(&Point::new(0, 0), "hello").is_ok());
-        assert_eq!("hello     \n          \n          \n          \n          \n", screen.get_contents());
+        assert_eq!("hello     \n          \n          \n          \n          ", screen.get_contents());
 
         let mut screen = Screen::with_size(Size::new(10, 5)).unwrap();
         assert!(screen.draw_text(&Point::new(1, 2), "Daniel").is_ok());
         assert!(screen.draw_text(&Point::new(0, 0), "hello").is_ok());
-        assert_eq!("hello     \n          \n Daniel   \n          \n          \n", screen.get_contents());
+        assert_eq!("hello     \n          \n Daniel   \n          \n          ", screen.get_contents());
     }
 
     #[test]
@@ -234,7 +233,7 @@ mod test {
         assert!(screen.draw_text(&Point::new(1, 2), "hello").is_ok());
         assert!(screen.draw_text(&Point::new(1, 2), "bonjour").is_ok());
 
-        assert_eq!("          \n          \n bonjour  \n          \n          \n", screen.get_contents());
+        assert_eq!("          \n          \n bonjour  \n          \n          ", screen.get_contents());
     }
 
     #[test]
@@ -251,7 +250,7 @@ mod test {
     fn draw_text_wrapping_test() {
         let mut screen = Screen::with_size(Size::new(10, 5)).unwrap();
         assert!(screen.draw_text_wrapping(&Point::new(7, 2), "hello").is_ok());
-        assert_eq!("          \n          \n       hel\nlo        \n          \n", screen.get_contents());
+        assert_eq!("          \n          \n       hel\nlo        \n          ", screen.get_contents());
     }
 
     #[test]

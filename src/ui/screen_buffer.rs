@@ -293,22 +293,22 @@ mod tests {
 
     #[test]
     fn get_contents_empty_test() {
-        assert_eq!("  \n", build_contents(&ScreenBuffer::with_size(Size::new(2, 1)).unwrap(), false));
-//        assert_eq!("  \n", ScreenBuffer::with_size(Size::new(2, 1)).unwrap().get_contents());
-        assert_eq!("  \n  \n", build_contents(&ScreenBuffer::with_size(Size::new(2, 2)).unwrap(), false));
-//        assert_eq!("  \n  \n", ScreenBuffer::with_size(Size::new(2, 2)).unwrap().get_contents());
+        assert_eq!("  ", build_contents(&ScreenBuffer::with_size(Size::new(2, 1)).unwrap(), false));
+//        assert_eq!("  ", ScreenBuffer::with_size(Size::new(2, 1)).unwrap().get_contents());
+        assert_eq!("  \n  ", build_contents(&ScreenBuffer::with_size(Size::new(2, 2)).unwrap(), false));
+//        assert_eq!("  \n  ", ScreenBuffer::with_size(Size::new(2, 2)).unwrap().get_contents());
     }
 
     #[test]
     fn get_contents_test() {
         let mut buffer = ScreenBuffer::with_size(Size::new(2, 2)).unwrap();
         assert!(buffer.draw_point(&Point::new(0, 0), 'x').is_ok());
-        assert_eq!("x \n  \n", build_contents(&buffer, false));
-//        assert_eq!("x \n  \n", buffer.get_contents());
+        assert_eq!("x \n  ", build_contents(&buffer, false));
+//        assert_eq!("x \n  ", buffer.get_contents());
 
         let mut buffer = ScreenBuffer::with_size(Size::new(10, 20)).unwrap();
         assert!(buffer.draw_point(&Point::new(5, 10), 'x').is_ok());
-        assert_eq!("          \n          \n          \n          \n          \n          \n          \n          \n          \n          \n     x    \n          \n          \n          \n          \n          \n          \n          \n          \n          \n", build_contents(&buffer, false));
-//        assert_eq!("          \n          \n          \n          \n          \n          \n          \n          \n          \n          \n     x    \n          \n          \n          \n          \n          \n          \n          \n          \n          \n", buffer.get_contents());
+        assert_eq!("          \n          \n          \n          \n          \n          \n          \n          \n          \n          \n     x    \n          \n          \n          \n          \n          \n          \n          \n          \n          ", build_contents(&buffer, false));
+//        assert_eq!("          \n          \n          \n          \n          \n          \n          \n          \n          \n          \n     x    \n          \n          \n          \n          \n          \n          \n          \n          \n          ", buffer.get_contents());
     }
 }
