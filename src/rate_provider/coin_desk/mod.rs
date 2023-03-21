@@ -1,7 +1,7 @@
 mod coin_desk_rate;
 
 use serde_json;
-use rate;
+use crate::rate;
 use self::coin_desk_rate::Rate as InternalRate;
 use super::ProviderError;
 use super::RateProvider;

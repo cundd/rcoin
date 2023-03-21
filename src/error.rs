@@ -1,4 +1,4 @@
-use term_style;
+use crate::term_style;
 
 pub fn _error(message: &str) -> ! {
     term_style::cursor::show_cursor();

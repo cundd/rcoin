@@ -1,3 +1,4 @@
+use serde::{Serialize, Deserialize};
 // https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=BTC,USD,EUR
 // {"BTC":0.03652,"USD":715.63,"EUR":595.13}
 

@@ -20,7 +20,7 @@ impl<F, R> KeyboardListener<F, R>
                 let mut buffer = [0; 1];
                 let bytes_read = match stdin().read(&mut buffer[..]) {
                     Ok(bytes_read) => bytes_read,
-                    Err(e) => panic!(e),
+                    Err(e) => panic!("{}", e),
                 };
 
 //                let mut buffer = String::new();

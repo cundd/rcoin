@@ -6,6 +6,7 @@ use super::ProviderError;
 use super::RateProvider;
 use super::Currency;
 use self::intermediate_rate::*;
+use serde::{Serialize, Deserialize};
 
 pub struct CoinMarketCap {}
 

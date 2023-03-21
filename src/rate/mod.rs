@@ -5,6 +5,7 @@ pub use self::rate_series::RateSeries;
 pub use self::currency::Currency;
 use matrix::PointTrait;
 use ui::CoordinatePrecision;
+use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Rate {
